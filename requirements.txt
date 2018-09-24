@@ -1,0 +1,17 @@
+# base
+Flask
+Flask-Mail
+Jinja2
+Markdown
+PyYAML
+Werkzeug
+requests
+
+# Celery
+redis
+celery
+
+# SQLAlchemy
+Flask-SQLAlchemy
+
+uwsgi
