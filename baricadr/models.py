@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from .backend import backend
+
+
 class Repo():
 
     self.backend = None
@@ -8,15 +11,16 @@ class Repo():
     self.password = None
     ...
 
-    def __init__(backend, ...):
+    def __init__(self, backend, ...):
         self.backend = backend # TODO fetch a Backend object
 
     def is_in_repo(self, path):
         return path.startswith(self.url)
 
+
 class Config():
 
-    def __init__():
+    def __init__(self):
         # TODO open the config file, from the option given to uwsgi
         self.repos = {}
 
