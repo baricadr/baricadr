@@ -25,3 +25,6 @@ class SftpBackend():
 
     def pull():
         print('Here I call rclone ...')
+        #TEST infra Rclone
+        #envoi des fichiers
+        #
