@@ -3,16 +3,24 @@
 from subprocess  import call
 from subprocess  import run
 
-PATH="/root"
+SRC_PATH="/root"
+DEST_PATH="/root"
 FILE="toto.txt"
-TYPE_TRANSFERT="copy" #move 
+TYPE_TRANSFERT="copy" #move
 
 try:
-    retcode = call('rclone ls sftp:'+PATH+'/'+FILE, shell=True)
+    retcode = call('rclone ls sftp:'+SRC_PATH+'/'+FILE, shell=True)
     if retcode != 0:
         raise RuntimeError("Child was terminated by signal " + str(retcode))
-    else:
-        run(['rclone',TYPE_TRANSFERT,'sftp:'+PATH+'/'+FILE,PATH])
+        #3 : file or dir don't exist
+except OSError as e:
+    print("Execution failed:"+e, file=sys.stderr)
+    sys.exit(1)
+
+try:
+    retcode = call('rclone '+TYPE_TRANSFERT+' sftp:'+SRC_PATH+'/'+FILE+' '+DEST_PATH, shell=True)
+    if retcode != 0:
+        raise RuntimeError("Child was terminated by signal " + str(retcode))
 except OSError as e:
     print("Execution failed:"+e, file=sys.stderr)
     sys.exit(1)
