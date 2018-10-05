@@ -29,4 +29,8 @@ services:
     redis:
         image: redis:4.0
 
-# TODO add mail thingy
+    mailhog:
+        image: mailhog/mailhog:v1.0.0
+        ports:
+            - "1025:1025"
+            - "8025:8025"
