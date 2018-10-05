@@ -1,3 +1,4 @@
+# Requirements for the Flask webapp
 # base
 Flask
 Flask-Mail
@@ -13,5 +14,3 @@ celery
 
 # SQLAlchemy
 Flask-SQLAlchemy
-
-uwsgi

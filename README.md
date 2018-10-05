@@ -1,4 +1,13 @@
-# Running it
+# Running it with Docker
+
+```
+docker-compose build
+docker-compose up -d
+```
+
+Monitor tasks at http://localhost:5555/
+
+# Running it manually
 
 ## To install dependencies
 

@@ -1,0 +1,32 @@
+# This is a development docker-compose.yml, don't use this one in production
+version: "3"
+services:
+    baricadr:
+        build: ./
+        ports:
+            - 9100:80
+        depends_on:
+            - redis
+
+    worker:
+        build:
+            context: .
+            dockerfile: docker_celery/Dockerfile
+        depends_on:
+            - redis
+
+    monitor:
+        build:
+            context: .
+            dockerfile: docker_celery/Dockerfile
+        ports:
+            - "5555:5555"
+        entrypoint: celery
+        command: flower -A celery_worker.celery --port=5555 --loglevel=info
+        depends_on:
+            - redis
+
+    redis:
+        image: redis:4.0
+
+# TODO add mail thingy
