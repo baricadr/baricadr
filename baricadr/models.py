@@ -1,37 +1,45 @@
-# -*- coding: utf-8 -*-
-
-from .backend import backend
+import yaml
 
 
 class Repo():
 
-    self.backend = None
-    self.url = None
-    self.user = None
-    self.password = None
-    ...
+    def __init__(self, backend, url, user, password):
 
-    def __init__(self, backend, ...):
-        self.backend = backend # TODO fetch a Backend object
+        self.backend = backend
+        self.url = url
+        self.user = user
+        self.password = password
 
     def is_in_repo(self, path):
         return path.startswith(self.url)
 
 
-class Config():
+class Repos():
 
-    def __init__(self):
-        # TODO open the config file, from the option given to uwsgi
-        self.repos = {}
+    def __init__(self, config_file, backends):
 
-        read_conf("path/to/config.yml")
+        self.config_file = config_file
+        self.backends = backends
+
+        self.read_conf(config_file)
 
     def read_conf(self, path):
 
-        self.repos[''] = Repo(backend, url, ...)
+        # TODO check path existence
+
+        self.repos = {}
+        with open(path, 'r') as stream:
+            repos_conf = yaml.safe_load(stream)
+            # TODO check syntax ok
+            # TODO could we get rid of [0] ?
+            for repo in repos_conf:
+                be = self.backends.get_by_name(repos_conf[repo][0]['backend'])
+                self.repos[repo] = Repo(be, repos_conf[repo][0]['url'], repos_conf[repo][0]['user'], repos_conf[repo][0]['password'])
 
     def get_repo(self, path):
 
-        for x in self.repo:
-            if self.repo['x'].is_in_repo(path):
-                return self.repo['x']
+        for x in self.repos:
+            if self.repos['x'].is_in_repo(path):
+                return self.repos['x']
+
+        raise RuntimeError('Could not find baricadr repository for path "%s"' % path)

@@ -7,6 +7,9 @@ services:
             - 9100:80
         depends_on:
             - redis
+        environment:
+            BARICADR_RUN_MODE: "dev"
+            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
 
     worker:
         build:
@@ -14,6 +17,9 @@ services:
             dockerfile: docker_celery/Dockerfile
         depends_on:
             - redis
+        environment:
+            BARICADR_RUN_MODE: "dev"
+            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
 
     monitor:
         build:
@@ -25,6 +31,9 @@ services:
         command: flower -A baricadr.tasks.celery --port=5555 --loglevel=info
         depends_on:
             - redis
+        environment:
+            BARICADR_RUN_MODE: "dev"
+            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
 
     redis:
         image: redis:4.0

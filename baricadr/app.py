@@ -4,10 +4,11 @@ import os
 from celery import Celery
 from flask import Flask, g, render_template
 
-# blueprints
 from .api import api
 
+from .backend import backends
 from .extensions import (celery, db, mail)
+from .models import Repos
 
 __all__ = ('create_app', 'create_celery', )
 
@@ -22,10 +23,25 @@ def create_app(config=None, app_name='baricadr', blueprints=None):
                 template_folder="templates"
                 )
 
-    app.config.from_object('baricadr.config')
+    configs = {
+        "dev": "baricadr.config.DevelopmentConfig",
+        "test": "baricadr.config.TestingConfig",
+        "prod": "baricadr.config.ProdConfig"
+    }
+    config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
+    app.config.from_object(configs[config_mode])
+
     app.config.from_pyfile('../local.cfg', silent=True)
     if config:
         app.config.from_pyfile(config)
+
+    # Load the list of baricadr repositories
+    app.backends = backends.Backends()
+    if 'BARICADR_REPOS_CONF' in app.config:
+        repos_file = app.config['BARICADR_REPOS_CONF']
+    else:
+        repos_file = os.getenv('BARICADR_REPOS_CONF', '/etc/baricadr/repos.yml')
+    app.repos = Repos(repos_file, app.backends)
 
     if blueprints is None:
         blueprints = BLUEPRINTS

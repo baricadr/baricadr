@@ -1,4 +1,15 @@
-# -*- coding: utf-8 -*-
+class Backends():
+    def __init__(self):
+        self.backends = {
+            'sftp': SftpBackend,
+        }
+
+    def get_by_name(self, name):
+
+        if name in self.backends:
+            return self.backends[name]
+
+        raise RuntimeError('Could not find backend named "%s"' % name)
 
 
 class Backend():
@@ -25,6 +36,3 @@ class SftpBackend():
 
     def pull():
         print('Here I call rclone ...')
-        #TEST infra Rclone
-        #envoi des fichiers
-        #
