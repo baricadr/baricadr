@@ -20,4 +20,4 @@ RUN apk add --no-cache \
 
 USER nobody
 
-ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info
+ENTRYPOINT celery -A baricadr.tasks.celery worker --loglevel=info

@@ -22,7 +22,7 @@ services:
         ports:
             - "5555:5555"
         entrypoint: celery
-        command: flower -A celery_worker.celery --port=5555 --loglevel=info
+        command: flower -A baricadr.tasks.celery --port=5555 --loglevel=info
         depends_on:
             - redis
 

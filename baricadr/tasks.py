@@ -1,4 +1,3 @@
-# import os
 import time
 
 from baricadr import create_app, create_celery
