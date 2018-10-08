@@ -53,3 +53,7 @@ services:
         ports:
             - "1025:1025"
             - "8025:8025"
+
+    sftp:
+        image: atmoz/sftp
+        command: foo:pass:1001
