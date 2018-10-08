@@ -53,18 +53,18 @@ You should write a yaml file containing the list of repositories managed by Bari
 
 ```
 /groups/bipaa/archive:
-    - backend: sftp # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
-    - url: adr-xxx-xxx.inra.fr
-    - user: gogepp
-    - password: xxxxx
-    - exclude: *xml
+    backend: sftp # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
+    url: adr-xxx-xxx.inra.fr
+    user: gogepp
+    password: xxxxx
+    exclude: *xml
 
 /groups/brassica/db:
-    - backend: s3 # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
-    - url: google
-    - user: gogepp
-    - password: xxxxx
-    - exclude: *xml
+    backend: s3 # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
+    url: google
+    user: gogepp
+    password: xxxxx
+    exclude: *xml
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file

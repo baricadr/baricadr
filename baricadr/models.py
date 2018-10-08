@@ -31,10 +31,9 @@ class Repos():
         with open(path, 'r') as stream:
             repos_conf = yaml.safe_load(stream)
             # TODO check syntax ok
-            # TODO could we get rid of [0] ?
             for repo in repos_conf:
-                be = self.backends.get_by_name(repos_conf[repo][0]['backend'])
-                self.repos[repo] = Repo(be, repos_conf[repo][0]['url'], repos_conf[repo][0]['user'], repos_conf[repo][0]['password'])
+                be = self.backends.get_by_name(repos_conf[repo]['backend'])
+                self.repos[repo] = Repo(be, repos_conf[repo]['url'], repos_conf[repo]['user'], repos_conf[repo]['password'])
 
     def get_repo(self, path):
 
