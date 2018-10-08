@@ -24,6 +24,7 @@ class DevelopmentConfig(BaseConfig):
     MAIL_PORT = 1025
     MAIL_USE_SSL = False
     MAIL_USERNAME = 'your@email.address'
+    MAIL_SUPPRESS_SEND = False  # enabling TESTING above sets this one to True, which we don't want as we use mailhog
 
     SQLALCHEMY_DATABASE_URI = 'sqlite:////%s/data.sqlite' % dirname(abspath(__file__))
     SQLALCHEMY_ECHO = True
