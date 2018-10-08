@@ -10,6 +10,9 @@ services:
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+        volumes:
+            - ./:/baricadr/:ro
+            - ./docker/uwsgi_dev.ini:/etc/uwsgi/uwsgi.ini:ro
 
     worker:
         build:
@@ -17,9 +20,14 @@ services:
             dockerfile: docker_celery/Dockerfile
         depends_on:
             - redis
+        entrypoint: python3
+        command: /opt/celery_dev_launch.py
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+        volumes:
+            - ./:/baricadr/:ro
+            - ./docker_celery/celery_dev_launch.py:/opt/celery_dev_launch.py:ro
 
     monitor:
         build:
@@ -28,12 +36,14 @@ services:
         ports:
             - "5555:5555"
         entrypoint: celery
-        command: flower -A baricadr.tasks.celery --port=5555 --loglevel=info
+        command: flower -A baricadr.tasks.celery --port=5555 --loglevel=info --autoreload
         depends_on:
             - redis
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+        volumes:
+            - ./:/baricadr/:ro
 
     redis:
         image: redis:4.0
