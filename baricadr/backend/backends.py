@@ -2,6 +2,7 @@ class Backends():
     def __init__(self):
         self.backends = {
             'sftp': SftpBackend,
+            's3': SftpBackend,
         }
 
     def get_by_name(self, name):
@@ -33,6 +34,15 @@ class SftpBackend():
     def __init__(self, url, user, password, exclude):
         RcloneBackend.__init__(self, url, user, password, exclude)
         self.name = 'sftp'
+
+    def pull():
+        print('Here I call rclone ...')
+
+
+class S3Backend():
+    def __init__(self, url, user, password, exclude):
+        RcloneBackend.__init__(self, url, user, password, exclude)
+        self.name = 's3'
 
     def pull():
         print('Here I call rclone ...')
