@@ -1,5 +1,5 @@
-from subprocess import PIPE, Popen, call
 import tempfile
+from subprocess import PIPE, Popen, call
 
 
 class Backends():
@@ -64,15 +64,14 @@ class SftpBackend(RcloneBackend):
     def pull(self, path):
         obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
-        tempRcloneConfig.tempdir = "/tmp"
         tempRcloneConfig.write('[' + self.name + ']\n')
         tempRcloneConfig.write('type = ' + self.name + '\n')
         tempRcloneConfig.write('host = ' + self.url + '\n')
         tempRcloneConfig.seek(0)
-        #print(tempRcloneConfig.read())
-        retcode = call('rclone copy --config ' + tempRcloneConfig.name + ' ' + SRC_PATH + '/' + path + ' ' + REMOTE + ':' + path + ' --sftp-user ' + user + ' --sftp-pass ' + obscure_password, shell=True)
+
+        retcode = call('rclone copy --config ' + tempRcloneConfig.name + ' ' + SRC_PATH + '/' + path + ' ' + self.name + ':' + path + ' --sftp-user ' + user + ' --sftp-pass ' + obscure_password, shell=True)
         if retcode != 0:
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't copy " + SRC_PATH +  '/' +FILE)
+            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't copy " + SRC_PATH + '/' + FILE)
             # ERROR_3 : file or dir don't exist
         tempRcloneConfig.close()
 
