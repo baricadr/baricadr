@@ -1,3 +1,4 @@
+import os
 import time
 
 from baricadr import create_app, create_celery
@@ -12,13 +13,18 @@ celery = create_celery(app)
 
 @celery.task(bind=True, name="pull_file")
 def pull_file(self, path):
+
     msg = Message(subject="Beginning to pull",
                   body="Beginning to pull %s" % path,
                   sender="from@example.com",
                   recipients=["abretaud@irisa.fr"])
+
     mail.send(msg)
     self.update_state(state='PROGRESS', meta={'status': 'not started'})
-    time.sleep(15)
+
+    repo = app.repos.get_repo(os.path.abspath(path))
+    repo.pull(os.path.abspath(path))
+
     self.update_state(state='PROGRESS', meta={'status': 'transferred'})
     time.sleep(15)
     self.update_state(state='PROGRESS', meta={'status': 'md5 ok'})

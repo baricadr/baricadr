@@ -6,9 +6,9 @@ from flask import Flask, g, render_template
 
 from .api import api
 
-from .backend import backends
 from .extensions import (celery, db, mail)
-from .models import Repos
+from .model import backends
+from .model.repos import Repos
 
 __all__ = ('create_app', 'create_celery', )
 

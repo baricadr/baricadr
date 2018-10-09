@@ -1,6 +1,8 @@
 import tempfile
 from subprocess import PIPE, Popen, call
 
+from flask import current_app
+
 
 class Backends():
     def __init__(self):
@@ -9,25 +11,29 @@ class Backends():
             's3': SftpBackend,
         }
 
-    def get_by_name(self, name):
+    def get_by_name(self, name, conf):
 
         if name in self.backends:
-            return self.backends[name]
+            return self.backends[name](conf)
 
         raise RuntimeError('Could not find backend named "%s"' % name)
 
 
 class Backend():
-    def __init__(self, local_path, url, user, password, exclude):
-        self.name = None
-        self.url = url
-        self.user = user
-        self.password = password
-        self.exclude = exclude
+    def __init__(self, conf):
 
-    def pull(self, path):
+        self.name = None
+
+        self.url = conf['url']
+        self.user = conf['user']
+        self.password = conf['password']
+
+    def pull(self, repo, path):
         """
         Download a file from remote into local repository
+
+        :type repo: Repo object
+        :param repo: a Repo object
 
         :type path: str
         :param path: path to pull, without local or remote prefix
@@ -39,8 +45,8 @@ class Backend():
 
 
 class RcloneBackend(Backend):
-    def __init__(self, url, user, password, exclude):
-        RcloneBackend.__init__(self, url, user, password, exclude)
+    def __init__(self, conf):
+        Backend.__init__(self, conf)
 
     def obscurify_password(self, clear_pass):
         """
@@ -57,29 +63,39 @@ class RcloneBackend(Backend):
 
 
 class SftpBackend(RcloneBackend):
-    def __init__(self, url, user, password, exclude):
-        RcloneBackend.__init__(self, url, user, password, exclude)
+    def __init__(self, conf):
+        RcloneBackend.__init__(self, conf)
         self.name = 'sftp'
 
-    def pull(self, path):
+        url_split = self.url.split(":")
+        self.remote_host = url_split[0]
+        self.remote_prefix = url_split[1]
+
+    def pull(self, repo, path):
         obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
         tempRcloneConfig.write('[' + self.name + ']\n')
         tempRcloneConfig.write('type = ' + self.name + '\n')
-        tempRcloneConfig.write('host = ' + self.url + '\n')
+        tempRcloneConfig.write('host = ' + self.remote_host + '\n')
         tempRcloneConfig.seek(0)
 
-        retcode = call('rclone copy --config ' + tempRcloneConfig.name + ' ' + SRC_PATH + '/' + path + ' ' + self.name + ':' + path + ' --sftp-user ' + user + ' --sftp-pass ' + obscure_password, shell=True)
+        rel_path = path[len(repo.local_path):]
+
+        src = "'%s:%s/%s'" % (self.name, self.remote_prefix, rel_path)
+        dest = "'%s'" % (path)
+        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
+        current_app.logger.debug("Running command: %s" % cmd)
+        retcode = call(cmd, shell=True)
         if retcode != 0:
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't copy " + SRC_PATH + '/' + FILE)
-            # ERROR_3 : file or dir don't exist
+            raise RuntimeError("Child was terminated by signal %s: can't copy %s" % (retcode, path))
+            # ERROR_3: file or dir don't exist
         tempRcloneConfig.close()
 
 
 class S3Backend(RcloneBackend):
-    def __init__(self, url, user, password, exclude):
-        RcloneBackend.__init__(self, url, user, password, exclude)
+    def __init__(self, conf):
+        RcloneBackend.__init__(self, conf)
         self.name = 's3'
 
-    def pull(self):
+    def pull(self, repo, path):
         print('Here I call rclone ...')

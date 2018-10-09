@@ -1,8 +1,8 @@
 /groups/bipaa/archive:
     backend: sftp # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
-    url: adr-xxx-xxx.inra.fr
-    user: gogepp
-    password: xxxxx
+    url: sftp:/prefix/on/remote/host
+    user: foo
+    password: pass
 #- exclude: *xml
 
 /groups/brassica/db:
