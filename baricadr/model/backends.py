@@ -8,7 +8,7 @@ class Backends():
     def __init__(self):
         self.backends = {
             'sftp': SftpBackend,
-            's3': SftpBackend,
+            's3': S3Backend,
         }
 
     def get_by_name(self, name, conf):
