@@ -1,9 +1,9 @@
 import pytest
 
-from . import app, BaricadTestCase
+from . import app, BaricadrTestCase
 
 
-class TestRepos(BaricadTestCase):
+class TestRepos(BaricadrTestCase):
 
     def test_get_empty(self, app):
         conf = {

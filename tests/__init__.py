@@ -28,5 +28,5 @@ def client():
     yield client
 
 
-class BaricadTestCase():
+class BaricadrTestCase():
     pass

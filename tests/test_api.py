@@ -1,7 +1,7 @@
-from . import app, client, BaricadTestCase
+from . import app, client, BaricadrTestCase
 
 
-class TestApi(BaricadTestCase):
+class TestApi(BaricadrTestCase):
 
     def test_get_status_unknown(self, client):
         response = client.get('/status/foobar')
