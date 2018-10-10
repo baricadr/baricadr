@@ -22,36 +22,36 @@ def create_app(config=None, app_name='baricadr', blueprints=None):
                 static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'),
                 template_folder="templates"
                 )
+    with app.app_context():
+        configs = {
+            "dev": "baricadr.config.DevelopmentConfig",
+            "test": "baricadr.config.TestingConfig",
+            "prod": "baricadr.config.ProdConfig"
+        }
+        config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
+        app.config.from_object(configs[config_mode])
 
-    configs = {
-        "dev": "baricadr.config.DevelopmentConfig",
-        "test": "baricadr.config.TestingConfig",
-        "prod": "baricadr.config.ProdConfig"
-    }
-    config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
-    app.config.from_object(configs[config_mode])
+        app.config.from_pyfile('../local.cfg', silent=True)
+        if config:
+            app.config.from_pyfile(config)
 
-    app.config.from_pyfile('../local.cfg', silent=True)
-    if config:
-        app.config.from_pyfile(config)
+        # Load the list of baricadr repositories
+        app.backends = backends.Backends()
+        if 'BARICADR_REPOS_CONF' in app.config:
+            repos_file = app.config['BARICADR_REPOS_CONF']
+        else:
+            repos_file = os.getenv('BARICADR_REPOS_CONF', '/etc/baricadr/repos.yml')
+        app.repos = Repos(repos_file, app.backends)
 
-    # Load the list of baricadr repositories
-    app.backends = backends.Backends()
-    if 'BARICADR_REPOS_CONF' in app.config:
-        repos_file = app.config['BARICADR_REPOS_CONF']
-    else:
-        repos_file = os.getenv('BARICADR_REPOS_CONF', '/etc/baricadr/repos.yml')
-    app.repos = Repos(repos_file, app.backends)
+        if blueprints is None:
+            blueprints = BLUEPRINTS
 
-    if blueprints is None:
-        blueprints = BLUEPRINTS
+        blueprints_fabrics(app, blueprints)
+        extensions_fabrics(app)
+        configure_logging(app)
 
-    blueprints_fabrics(app, blueprints)
-    extensions_fabrics(app)
-    configure_logging(app)
-
-    error_pages(app)
-    gvars(app)
+        error_pages(app)
+        gvars(app)
 
     return app
 
