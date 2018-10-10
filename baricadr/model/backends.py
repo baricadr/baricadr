@@ -24,6 +24,15 @@ class Backend():
 
         self.name = None
 
+        if 'url' not in conf:
+            raise ValueError("Missing 'url' in backend config '%s'" % conf)
+
+        if 'user' not in conf:
+            raise ValueError("Missing 'user' in backend config '%s'" % conf)
+
+        if 'password' not in conf:
+            raise ValueError("Missing 'password' in backend config '%s'" % conf)
+
         self.url = conf['url']
         self.user = conf['user']
         self.password = conf['password']
@@ -52,12 +61,12 @@ class RcloneBackend(Backend):
         """
         Generate obscure password to connect to distant server
         """
-        cmd = "rclone obscure '%s'" % clear_pass
+        cmd = "rclone obscure %s" % clear_pass
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
-        obscure_password = output.decode('ascii')
+        obscure_password = output.decode('ascii').strip('\n')
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
