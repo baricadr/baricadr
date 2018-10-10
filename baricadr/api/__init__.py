@@ -10,7 +10,8 @@ api = Blueprint('api', __name__, url_prefix='/')
 def pull_files():
     current_app.logger.info(request.json)
     celery = current_app.celery
-    task = celery.send_task('pull_file', (request.json,))
+    # TODO check that 'files' exists
+    task = celery.send_task('pull_file', (request.json['files'],))
     return jsonify({'tasks': task.task_id})
 
 
