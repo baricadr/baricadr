@@ -46,8 +46,8 @@ class Repos():
 
     def get_repo(self, path):
 
-        for x in self.repos:
-            if self.repos['x'].is_in_repo(path):
-                return self.repos['x']
+        for repo in self.repos:
+            if self.repos[repo].is_in_repo(path):
+                return self.repos[repo]
 
         raise RuntimeError('Could not find baricadr repository for path "%s"' % path)
