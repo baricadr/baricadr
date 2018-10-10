@@ -52,11 +52,15 @@ class RcloneBackend(Backend):
         """
         Generate obscure password to connect to distant server
         """
-        p = Popen(['rclone', 'obscure', clear_pass], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        cmd = "rclone obscure '%s'" % clear_pass
+        current_app.logger.info(cmd)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
         obscure_password = output.decode('ascii')
         if retcode != 0:
+            current_app.logger.error(output)
+            current_app.logger.error(err)
             raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password")
 
         return obscure_password
@@ -81,8 +85,8 @@ class SftpBackend(RcloneBackend):
 
         rel_path = path[len(repo.local_path):]
 
-        src = "'%s:%s/%s'" % (self.name, self.remote_prefix, rel_path)
-        dest = "'%s'" % (path)
+        src = "%s:%s/%s" % (self.name, self.remote_prefix, rel_path)
+        dest = "%s" % (path)
         cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
