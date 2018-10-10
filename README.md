@@ -8,7 +8,18 @@ docker-compose up -d
 Monitor tasks at http://localhost:5555/
 See emails at http://localhost:8025/
 
+# Running test
+
+Run the app with docker-compose, then run this:
+
+```
+docker-compose exec baricadr bash
+pytest
+```
+
 # Running it manually
+
+Not recommended, use at your own risk
 
 ## To install dependencies
 

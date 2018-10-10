@@ -13,7 +13,7 @@ from watchdog.observers import Observer
 
 code_dir_to_monitor = "/baricadr/"
 celery_working_dir = code_dir_to_monitor
-celery_cmdline = 'celery -A baricadr.tasks.celery worker --loglevel=info'.split(" ")
+celery_cmdline = '/usr/bin/celery -A baricadr.tasks.celery worker --loglevel=info'.split(" ")
 
 
 class MyHandler(PatternMatchingEventHandler):

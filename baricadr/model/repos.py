@@ -7,6 +7,9 @@ class Repo():
 
     def __init__(self, local_path, conf):
 
+        if 'backend' not in conf:
+            raise ValueError("Malformed repository definition, missing backend '%s'" % conf)
+
         self.local_path = local_path
         self.exclude = None
         if 'exclude' in conf:
@@ -34,15 +37,25 @@ class Repos():
     def read_conf(self, path):
 
         # TODO check path existence
-        self.repos = {}
         with open(path, 'r') as stream:
-            repos_conf = yaml.safe_load(stream)
-            for repo in repos_conf:
-                repo_abs = os.path.abspath(repo)
-                if repo_abs in self.repos:
-                    raise RuntimeError('Could not load duplicate repository for path "%s"' % repo_abs)
+            self.repos = self.do_read_conf(stream.read())
 
-                self.repos[repo_abs] = Repo(repo_abs, repos_conf[repo])
+    def do_read_conf(self, content):
+
+        # TODO check path existence
+        repos = {}
+        repos_conf = yaml.safe_load(content)
+        if not repos_conf:
+            raise ValueError("Malformed repository definition '%s'" % content)
+
+        for repo in repos_conf:
+            repo_abs = os.path.abspath(repo)
+            if repo_abs in repos:
+                raise RuntimeError('Could not load duplicate repository for path "%s"' % repo_abs)
+
+            repos[repo_abs] = Repo(repo_abs, repos_conf[repo])
+
+        return repos
 
     def get_repo(self, path):
 
