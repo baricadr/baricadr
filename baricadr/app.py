@@ -17,7 +17,7 @@ BLUEPRINTS = (
 )
 
 
-def create_app(config=None, app_name='baricadr', blueprints=None):
+def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None):
     app = Flask(app_name,
                 static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'),
                 template_folder="templates"
@@ -28,7 +28,10 @@ def create_app(config=None, app_name='baricadr', blueprints=None):
             "test": "baricadr.config.TestingConfig",
             "prod": "baricadr.config.ProdConfig"
         }
-        config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
+        if run_mode:
+            config_mode = run_mode
+        else:
+            config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
         app.config.from_object(configs[config_mode])
 
         app.config.from_pyfile('../local.cfg', silent=True)
