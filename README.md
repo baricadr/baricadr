@@ -1,5 +1,7 @@
 # Baricadr
 
+[![Build](https://travis-ci.org/baricadr/baricadr.svg?branch=master)](https://travis-ci.org/baricadr/baricadr)
+
 Baricadr is a small application designed to:
 
 - Transfer files from a remote source to a local copy
