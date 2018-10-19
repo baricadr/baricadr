@@ -1,4 +1,4 @@
-from baricadr import create_app, create_celery
+from baricadr.app import create_app, create_celery
 
 application = create_app(config='../local.cfg')
 celery = create_celery(application)

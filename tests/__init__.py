@@ -1,4 +1,4 @@
-from baricadr import create_app, create_celery
+from baricadr.app import create_app, create_celery
 import pytest
 
 

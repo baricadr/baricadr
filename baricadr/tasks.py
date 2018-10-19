@@ -1,6 +1,6 @@
 import os
 
-from baricadr import create_app, create_celery
+from baricadr.app import create_app, create_celery
 from celery.signals import task_postrun
 from flask_mail import Message
 
