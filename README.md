@@ -1,4 +1,6 @@
-BARICADR is a small application designed to:
+# Baricadr
+
+Baricadr is a small application designed to:
 
 - Transfer files from a remote source to a local copy
 - Only keep used files in the local copy
