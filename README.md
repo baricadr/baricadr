@@ -20,6 +20,7 @@ docker-compose up -d
 ```
 
 Monitor tasks at http://localhost:5555/
+
 See emails at http://localhost:8025/
 
 # Running tests
