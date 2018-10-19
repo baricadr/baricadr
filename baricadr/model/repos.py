@@ -10,7 +10,7 @@ class Repo():
         if 'backend' not in conf:
             raise ValueError("Malformed repository definition, missing backend '%s'" % conf)
 
-        self.local_path = local_path
+        self.local_path = local_path  # No trailing slash
         self.exclude = None
         if 'exclude' in conf:
             self.exclude = conf['exclude']
@@ -23,6 +23,9 @@ class Repo():
 
     def pull(self, path):
         self.backend.pull(self, path)
+
+    def relative_path(self, path):
+        return path[len(self.local_path) + 1:]
 
 
 class Repos():

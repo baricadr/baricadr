@@ -1,3 +1,13 @@
+BARICADR is a small application designed to:
+
+- Transfer files from a remote source to a local copy
+- Only keep used files in the local copy
+- Download data on demand into the local copy
+
+It is a prototype and not yet ready for production.
+
+It was originally designed for the BBRIC/BARIC CATI at INRA, with the AgroDataRing project.
+
 # Running it with Docker
 
 ```
@@ -26,7 +36,7 @@ docker-compose exec baricadr pytest -v --log-cli-level debug
 
 ## Triggering a "pull"
 
-`curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/groups/bipaa/archive/prout.gz"}'`
+`curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/some/local/path/test.gz"}'`
 
 ## Checking the status
 
@@ -47,17 +57,17 @@ To override the configuration of the selected run mode, you need to create a fil
 You should write a yaml file containing the list of repositories managed by Baricadr. Use this syntax:
 
 ```
-/groups/bipaa/archive:
-    backend: sftp # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
-    url: adr-xxx-xxx.inra.fr
-    user: gogepp
-    password: xxxxx
+/some/local/path:
+    backend: sftp
+    url: sftp.server.fqdn
+    user: foo
+    password: bar
     exclude: *xml
 
-/groups/brassica/db:
-    backend: s3 # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
+/another/local/path:
+    backend: s3
     url: google
-    user: gogepp
+    user: someone
     password: xxxxx
     exclude: *xml
 ```

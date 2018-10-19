@@ -1,13 +1,13 @@
-/groups/bipaa/archive:
-    backend: sftp # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
+/some/local/path:
+    backend: sftp
     url: sftp:/prefix/on/remote/host
     user: foo
     password: pass
 #- exclude: *xml
 
-/groups/brassica/db:
-    backend: s3 # Pourrait être ssh, ftp, http, s3, ... (rclone ?)
+/another/local/path:
+    backend: s3
     url: google
-    user: gogepp
+    user: someone
     password: xxxxx
     #- exclude: *xml

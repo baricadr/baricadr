@@ -43,7 +43,7 @@ class TestBackends(BaricadrTestCase):
             conf = {
                 local_path: {
                     'backend': 'sftp',
-                    'url': 'foo:/home/foo/test-repo/',
+                    'url': 'sftp:test-repo/',
                     'user': 'foo',
                     'password': 'pass'
                 }

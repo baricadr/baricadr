@@ -92,7 +92,7 @@ class SftpBackend(RcloneBackend):
         tempRcloneConfig.write('host = ' + self.remote_host + '\n')
         tempRcloneConfig.seek(0)
 
-        rel_path = path[len(repo.local_path):]
+        rel_path = repo.relative_path(path)
 
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
         # TODO detect if file or dir
