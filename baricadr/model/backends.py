@@ -61,7 +61,7 @@ class RcloneBackend(Backend):
         """
         Generate obscure password to connect to distant server
         """
-        cmd = "rclone obscure %s" % clear_pass
+        cmd = "rclone obscure %s" % clear_pass  # FIXME check quotes, risk of injection, could we use stdin?
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
@@ -97,7 +97,7 @@ class SftpBackend(RcloneBackend):
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
         # TODO detect if file or dir
         dest = "%s" % (path)
-        cmd = "rclone copy --config %s %s %s --sftp-user %s --sftp-pass %s" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
+        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)  # FIXME check quotes
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
         if retcode != 0:

@@ -1,4 +1,4 @@
-from baricadr import create_app
+from baricadr import create_app, create_celery
 import pytest
 
 
@@ -6,6 +6,7 @@ import pytest
 def app():
 
     current_app = create_app(run_mode='test')
+    create_celery(current_app)
 
     # Establish an application context before running the tests.
     ctx = current_app.app_context()
@@ -18,6 +19,7 @@ def app():
 def client():
 
     current_app = create_app(run_mode='test')
+    create_celery(current_app)
 
     # Establish an application context before running the tests.
     ctx = current_app.app_context()

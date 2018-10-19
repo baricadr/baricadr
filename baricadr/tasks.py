@@ -1,5 +1,4 @@
 import os
-import time
 
 from baricadr import create_app, create_celery
 from celery.signals import task_postrun
@@ -12,29 +11,24 @@ celery = create_celery(app)
 
 
 @celery.task(bind=True, name="pull_file")
-def pull_file(self, path):
+def pull_file(self, path, email=None):
 
-    msg = Message(subject="Beginning to pull",
-                  body="Beginning to pull %s" % path,
-                  sender="from@example.com",
-                  recipients=["abretaud@irisa.fr"])
-
-    mail.send(msg)
-    #self.update_state(state='PROGRESS', meta={'status': 'not started'})
+    self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
     repo = app.repos.get_repo(os.path.abspath(path))
+    self.update_state(state='PROGRESS', meta={'status': 'pulling'})
     repo.pull(os.path.abspath(path))
 
-    """self.update_state(state='PROGRESS', meta={'status': 'transferred'})
-    time.sleep(15)
-    self.update_state(state='PROGRESS', meta={'status': 'md5 ok'})
-    time.sleep(15)
-    self.update_state(state='PROGRESS', meta={'status': 'finished ok'})
-    msg = Message(subject="Finished to pull",
-                  body="Finished to pull %s" % path,
-                  sender="from@example.com",
-                  recipients=["abretaud@irisa.fr"])
-    mail.send(msg)"""
+    # TODO check md5
+
+    self.update_state(state='PROGRESS', meta={'status': 'success'})
+
+    if email:
+        msg = Message(subject="Finished to pull",
+                      body="Finished to pull %s" % path,  # TODO better text
+                      sender="from@example.com",  # TODO get sender from config
+                      recipients=[email])
+        mail.send(msg)
 
 
 @task_postrun.connect

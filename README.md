@@ -13,18 +13,18 @@ See emails at http://localhost:8025/
 Run the app with docker-compose, then run this:
 
 ```
-docker-compose exec baricadr pytest
+docker-compose exec baricadr pytest -v
 ```
 
 # Using it
 
 ## Triggering a "pull"
 
-`curl  -H "Content-type: application/json" -X POST http://localhost:5000/pull -d '{"files": "/groups/bipaa/archive/prout.gz"}'`
+`curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/groups/bipaa/archive/prout.gz"}'`
 
 ## Checking the status
 
-`curl  -H "Content-type: application/json" -X GET http://localhost:5000/status/<pull-id>`
+`curl  -H "Content-type: application/json" -X GET http://localhost:9100/status/<pull-id>`
 
 With pull-id = the return of the pull POST call above
 

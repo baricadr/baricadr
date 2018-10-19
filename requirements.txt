@@ -7,6 +7,7 @@ Markdown
 PyYAML
 Werkzeug
 requests
+email_validator
 
 # Celery
 redis

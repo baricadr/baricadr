@@ -11,6 +11,7 @@ PyYAML
 Werkzeug
 requests
 Flask-SQLAlchemy
+email_validator
 
 
 # Only needed in dev mode (ie to use docker_celery/celery_dev_launch.py)
