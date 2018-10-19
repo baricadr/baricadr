@@ -30,11 +30,3 @@ jobs:
         - sleep 30 # Wait for the container to be ready
       script:
         - docker-compose exec baricadr pytest -v --log-cli-level debug
-    - stage: test
-      python: '3.7'
-      install:
-        - docker-compose build
-        - docker-compose up -d
-        - sleep 30 # Wait for the container to be ready
-      script:
-        - docker-compose exec baricadr pytest -v --log-cli-level debug
