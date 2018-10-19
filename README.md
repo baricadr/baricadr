@@ -8,37 +8,15 @@ docker-compose up -d
 Monitor tasks at http://localhost:5555/
 See emails at http://localhost:8025/
 
-# Running test
+# Running tests
 
 Run the app with docker-compose, then run this:
 
 ```
-docker-compose exec baricadr bash
-pytest
+docker-compose exec baricadr pytest
 ```
 
-# Running it manually
-
-Not recommended, use at your own risk
-
-## To install dependencies
-
-`make setup`
-
-## To launch the web part
-
-`make run`
-(or `make dev` to run in development mode = auto reload modified python code)
-
-## Then the Redis queue
-
-`docker run --name some-redis -d -p 6379:6379 redis`
-
-## And Celery
-
-`make celery`
-
-# Testing it
+# Using it
 
 ## Triggering a "pull"
 
