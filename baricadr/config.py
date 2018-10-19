@@ -14,6 +14,7 @@ class BaseConfig(object):
     CELERY_ACCEPT_CONTENT = ['json', ]
 
     SQLALCHEMY_ECHO = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(BaseConfig):

@@ -1,5 +1,7 @@
 from celery.result import AsyncResult
+
 from email_validator import EmailNotValidError, validate_email
+
 from flask import (Blueprint, current_app, jsonify, request)
 
 api = Blueprint('api', __name__, url_prefix='/')

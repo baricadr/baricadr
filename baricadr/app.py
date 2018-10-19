@@ -1,9 +1,10 @@
 import os
+
 from celery import Celery
+
 from flask import Flask, g, render_template
 
 from .api import api
-
 from .extensions import (celery, db, mail)
 from .model import backends
 from .model.repos import Repos

@@ -1,5 +1,7 @@
 import os.path
+
 from flask import current_app
+
 import yaml
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from . import app, BaricadrTestCase
+from . import BaricadrTestCase
 
 
 class TestRepos(BaricadrTestCase):

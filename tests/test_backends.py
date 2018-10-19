@@ -1,8 +1,9 @@
 import os
-import pytest
 import tempfile
 
-from . import app, BaricadrTestCase
+import pytest
+
+from . import BaricadrTestCase
 
 
 class TestBackends(BaricadrTestCase):

@@ -1,4 +1,4 @@
-from . import app, client, BaricadrTestCase
+from . import BaricadrTestCase
 
 
 class TestApi(BaricadrTestCase):
