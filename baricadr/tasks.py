@@ -20,12 +20,12 @@ def pull_file(self, path):
                   recipients=["abretaud@irisa.fr"])
 
     mail.send(msg)
-    self.update_state(state='PROGRESS', meta={'status': 'not started'})
+    #self.update_state(state='PROGRESS', meta={'status': 'not started'})
 
     repo = app.repos.get_repo(os.path.abspath(path))
     repo.pull(os.path.abspath(path))
 
-    self.update_state(state='PROGRESS', meta={'status': 'transferred'})
+    """self.update_state(state='PROGRESS', meta={'status': 'transferred'})
     time.sleep(15)
     self.update_state(state='PROGRESS', meta={'status': 'md5 ok'})
     time.sleep(15)
@@ -34,7 +34,7 @@ def pull_file(self, path):
                   body="Finished to pull %s" % path,
                   sender="from@example.com",
                   recipients=["abretaud@irisa.fr"])
-    mail.send(msg)
+    mail.send(msg)"""
 
 
 @task_postrun.connect

@@ -1,9 +1,9 @@
 import pytest
 
-from . import app, BaricadTestCase
+from . import app, BaricadrTestCase
 
 
-class TestBackends(BaricadTestCase):
+class TestBackends(BaricadrTestCase):
 
     def test_get(self, app):
         conf = {

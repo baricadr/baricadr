@@ -94,9 +94,10 @@ class SftpBackend(RcloneBackend):
 
         rel_path = path[len(repo.local_path):]
 
-        src = "%s:%s/%s" % (self.name, self.remote_prefix, rel_path)
+        src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
+        # TODO detect if file or dir
         dest = "%s" % (path)
-        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
+        cmd = "rclone copy --config %s %s %s --sftp-user %s --sftp-pass %s" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
         if retcode != 0:
