@@ -40,6 +40,10 @@ class Repos():
         with open(path, 'r') as stream:
             self.repos = self.do_read_conf(stream.read())
 
+    def read_conf_from_str(self, content):
+
+        self.repos = self.do_read_conf(content)
+
     def do_read_conf(self, content):
 
         # TODO check path existence

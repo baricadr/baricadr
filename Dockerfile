@@ -21,6 +21,14 @@ RUN apk add --no-cache \
     rm /etc/nginx/conf.d/default.conf && \
     rm -r /root/.cache
 
+# Rclone install, needed for tests
+ENV PLATFORM_ARCH="amd64"
+ARG RCLONE_VERSION="1.43"
+RUN  cd /tmp && \
+wget -q https://downloads.rclone.org/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-${PLATFORM_ARCH}.zip && \
+unzip /tmp/rclone-v${RCLONE_VERSION}-linux-${PLATFORM_ARCH}.zip && \
+mv /tmp/rclone-*-linux-${PLATFORM_ARCH}/rclone /usr/bin
+
 COPY docker/nginx.conf /etc/nginx/
 COPY docker/nginx_baricadr.conf /etc/nginx/conf.d/
 COPY docker/uwsgi.ini /etc/uwsgi/

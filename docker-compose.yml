@@ -57,3 +57,5 @@ services:
     sftp:
         image: atmoz/sftp
         command: foo:pass:1001
+        volumes:
+            - ./test-data/test-repo/:/home/foo/test-repo/:ro

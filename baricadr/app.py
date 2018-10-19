@@ -32,6 +32,10 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None)
             config_mode = run_mode
         else:
             config_mode = os.getenv('BARICADR_RUN_MODE', 'prod')
+
+        if 'BARICADR_RUN_MODE' not in app.config:
+            app.config['BARICADR_RUN_MODE'] = config_mode
+
         app.config.from_object(configs[config_mode])
 
         app.config.from_pyfile('../local.cfg', silent=True)
@@ -128,9 +132,11 @@ def configure_logging(app):
     import logging
     from logging.handlers import SMTPHandler
 
-    # Set info level on logger, which might be overwritten by handers.
-    # Suppress DEBUG messages.
-    app.logger.setLevel(logging.INFO)
+    # Set log level
+    if app.config['BARICADR_RUN_MODE'] == 'test':
+        app.logger.setLevel(logging.DEBUG)
+    else:
+        app.logger.setLevel(logging.INFO)
 
     info_log = os.path.join(app.config['LOG_FOLDER'], 'info.log')
     info_file_handler = logging.handlers.RotatingFileHandler(info_log, maxBytes=100000, backupCount=10)

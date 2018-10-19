@@ -13,7 +13,13 @@ See emails at http://localhost:8025/
 Run the app with docker-compose, then run this:
 
 ```
-docker-compose exec baricadr pytest -v
+docker-compose exec baricadr pytest
+```
+
+If you need more details and debug logs:
+
+```
+docker-compose exec baricadr pytest -v --log-cli-level debug
 ```
 
 # Using it

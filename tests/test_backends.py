@@ -1,4 +1,6 @@
+import os
 import pytest
+import tempfile
 
 from . import app, BaricadrTestCase
 
@@ -32,3 +34,24 @@ class TestBackends(BaricadrTestCase):
         }
         with pytest.raises(ValueError):
             app.backends.get_by_name("sftp", conf)
+
+    def test_pull_sftp_single(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/file.txt'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'foo:/home/foo/test-repo/',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+            repo.pull(single_file)
+
+            assert os.path.exists(single_file)

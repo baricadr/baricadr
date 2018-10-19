@@ -112,4 +112,4 @@ class S3Backend(RcloneBackend):
         self.name = 's3'
 
     def pull(self, repo, path):
-        print('Here I call rclone ...')
+        raise NotImplementedError()
