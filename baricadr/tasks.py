@@ -17,9 +17,11 @@ def pull_file(self, path, email=None):
 
     self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
-    repo = app.repos.get_repo(os.path.abspath(path))
+    asked_path = os.path.abspath(path)  # FIXME use realpath to resolve symlinks?
+
+    repo = app.repos.get_repo(asked_path)
     self.update_state(state='PROGRESS', meta={'status': 'pulling'})
-    repo.pull(os.path.abspath(path))
+    repo.pull(asked_path)
 
     # TODO check md5
 

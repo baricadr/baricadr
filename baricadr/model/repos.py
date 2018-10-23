@@ -58,13 +58,31 @@ class Repos():
             raise ValueError("Malformed repository definition '%s'" % content)
 
         for repo in repos_conf:
-            repo_abs = os.path.abspath(repo)
+            repo_abs = os.path.abspath(repo)  # FIXME use realpath to resolve symlinks?
             if repo_abs in repos:
-                raise RuntimeError('Could not load duplicate repository for path "%s"' % repo_abs)
+                raise ValueError('Could not load duplicate repository for path "%s"' % repo_abs)
+
+            for known in repos:
+                if self._is_subdir_of(repo_abs, known):
+                    raise ValueError('Could not load repository for path "%s", conflicting with "%s"' % (repo_abs, known))
 
             repos[repo_abs] = Repo(repo_abs, repos_conf[repo])
 
         return repos
+
+    def _is_subdir_of(self, path1, path2):
+
+        if path1 == path2:
+            return True
+
+        if len(path1) > len(path2):
+            if path2 == path1[:len(path2)]:
+                return True
+        elif len(path1) < len(path2):
+            if path1 == path2[:len(path1)]:
+                return True
+
+        return False
 
     def get_repo(self, path):
 
