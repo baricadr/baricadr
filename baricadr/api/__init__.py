@@ -37,4 +37,13 @@ def pull_files():
 def status_pull(task_id):
     current_app.logger.info("Getting status of task_id")
     res = AsyncResult(task_id)
-    return jsonify({'finished': res.ready(), 'info': res.info})
+    info = res.info
+    error = 'false'
+
+    # Make exceptions readable
+    if isinstance(info, RuntimeError):
+        error = 'true'
+        info = str(info)
+
+    current_app.logger.debug("Task state from Celery: %s" % res.info)
+    return jsonify({'finished': str(res.ready()).lower(), 'error': error, 'info': info})
