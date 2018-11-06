@@ -26,5 +26,5 @@ class TestApi(BaricadrTestCase):
         response = client.get('/status/foobar')
 
         # TODO maybe we should send a 404 error, but celery can't say if the task is finished or doesn't exist
-        assert response.json == {'finished': False, 'info': None}
+        assert response.json == {'finished': 'false', 'error': 'false', 'info': None}
         assert response.status_code == 200
