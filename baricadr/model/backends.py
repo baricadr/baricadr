@@ -1,5 +1,5 @@
-import tempfile
 import os
+import tempfile
 from subprocess import PIPE, Popen, call
 
 from flask import current_app
