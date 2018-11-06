@@ -56,3 +56,24 @@ class TestBackends(BaricadrTestCase):
             repo.pull(single_file)
 
             assert os.path.exists(single_file)
+
+    def test_pull_sftp_single_no_slash(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/file.txt'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+            repo.pull(single_file)
+
+            assert os.path.exists(single_file)
