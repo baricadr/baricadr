@@ -1,4 +1,4 @@
-import os.path
+import os
 
 from flask import current_app
 
@@ -41,7 +41,6 @@ class Repos():
 
     def read_conf(self, path):
 
-        # TODO check path existence
         with open(path, 'r') as stream:
             self.repos = self.do_read_conf(stream.read())
 
@@ -51,7 +50,6 @@ class Repos():
 
     def do_read_conf(self, content):
 
-        # TODO check path existence
         repos = {}
         repos_conf = yaml.safe_load(content)
         if not repos_conf:
@@ -59,6 +57,9 @@ class Repos():
 
         for repo in repos_conf:
             repo_abs = os.path.abspath(repo)  # FIXME use realpath to resolve symlinks?
+            if not os.path.exists(repo_abs):
+                os.makedirs(repo_abs)
+                current_app.logger.warn("create directory  %s" % repo_abs)
             if repo_abs in repos:
                 raise ValueError('Could not load duplicate repository for path "%s"' % repo_abs)
 
