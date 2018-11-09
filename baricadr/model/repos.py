@@ -59,7 +59,7 @@ class Repos():
             repo_abs = os.path.abspath(repo)  # FIXME use realpath to resolve symlinks?
             if not os.path.exists(repo_abs):
                 os.makedirs(repo_abs)
-                current_app.logger.warn("create directory  %s" % repo_abs)
+                current_app.logger.warn("Directory '%s' does not exist, creating it" % repo_abs)
             if repo_abs in repos:
                 raise ValueError('Could not load duplicate repository for path "%s"' % repo_abs)
 
