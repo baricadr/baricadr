@@ -73,5 +73,9 @@ class TestRepos(BaricadrTestCase):
                     'password': 'pass'
                 }
             }
+            
+            assert not os.path.exists(local_path_not_exist)
+            
             app.repos.read_conf_from_str(str(conf))
+            
             assert os.path.exists(local_path_not_exist)
