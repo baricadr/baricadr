@@ -77,3 +77,47 @@ class TestBackends(BaricadrTestCase):
             repo.pull(single_file)
 
             assert os.path.exists(single_file)
+
+    def test_pull_sftp_repo(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/subdir/'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+            repo.pull(single_file)
+            assert os.path.exists(single_file + '/subfile.txt')
+            assert os.path.isdir(single_file + '/subsubdir')
+            assert os.path.exists(single_file + '/subsubdir/subsubfile.txt')
+
+    def test_pull_sftp_repo_no_slash(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/subdir'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+            repo.pull(single_file)
+            assert os.path.exists(single_file + '/subfile.txt')
+            assert os.path.isdir(single_file + '/subsubdir')
+            assert os.path.exists(single_file + '/subsubdir/subsubfile.txt')
