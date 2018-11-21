@@ -1,11 +1,11 @@
-/some/local/path:
+/tmp/some/local/path:
     backend: sftp
     url: sftp:/prefix/on/remote/host
     user: foo
     password: pass
 #- exclude: *xml
 
-/another/local/path:
+/tmp/another/local/path:
     backend: s3
     url: google
     user: someone

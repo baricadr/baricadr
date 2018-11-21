@@ -56,10 +56,11 @@ class Repos():
             raise ValueError("Malformed repository definition '%s'" % content)
 
         for repo in repos_conf:
-            repo_abs = os.path.abspath(repo)  # FIXME use realpath to resolve symlinks?
+            # We use realpath instead of abspath to resolve symlinks and be sure the user is not doing strange things
+            repo_abs = os.path.realpath(repo)
             if not os.path.exists(repo_abs):
+                current_app.logger.warning("Directory '%s' does not exist, creating it" % repo_abs)
                 os.makedirs(repo_abs)
-                current_app.logger.warn("Directory '%s' does not exist, creating it" % repo_abs)
             if repo_abs in repos:
                 raise ValueError('Could not load duplicate repository for path "%s"' % repo_abs)
 

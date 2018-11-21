@@ -5,8 +5,8 @@ MAINTAINER "Anthony Bretaudeau <anthony.bretaudeau@inra.fr>"
 ENV CELERY_BROKER_URL redis://redis:6379/0
 ENV CELERY_RESULT_BACKEND redis://redis:6379/0
 
-COPY . /bariadr
-WORKDIR /bariadr
+COPY . /baricadr
+WORKDIR /baricadr
 
 RUN apk add --no-cache \
     python3 \
@@ -16,7 +16,7 @@ RUN apk add --no-cache \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
     pip3 install --upgrade pip setuptools && \
-    pip3 install -r /bariadr/requirements_celery.txt && \
+    pip3 install -r /baricadr/requirements_celery.txt && \
     rm -r /root/.cache
 
 # Rclone install

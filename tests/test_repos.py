@@ -61,6 +61,35 @@ class TestRepos(BaricadrTestCase):
         with pytest.raises(ValueError):
             app.repos.do_read_conf(str(conf))
 
+    def test_overlap_symlink(self, app):
+
+        lnk_src = '/foo/bar/some/thing'
+        lnk_dst = '/tmp/somelink'
+
+        if os.path.isdir(lnk_dst):
+            os.unlink(lnk_dst)
+        os.symlink(lnk_src, lnk_dst)
+
+        conf = {
+            '/foo/bar/': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx'
+            },
+            lnk_dst: {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx'
+            }
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))
+
+        os.unlink(lnk_dst)
+
     def test_dir_not_exist(self, app):
 
         with tempfile.TemporaryDirectory() as local_path:
