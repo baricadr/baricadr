@@ -1,5 +1,7 @@
 import os
 
+from baricadr.db_models import PullTask
+
 from flask import current_app
 
 import yaml
@@ -93,3 +95,12 @@ class Repos():
                 return self.repos[repo]
 
         raise RuntimeError('Could not find baricadr repository for path "%s"' % path)
+
+    def is_pulling(self, path):
+
+        running_tasks = PullTask.query.all()
+        for rt in running_tasks:
+            if path.startswith(rt.path):
+                return rt.task_id
+
+        return False

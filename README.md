@@ -78,3 +78,15 @@ You should write a yaml file containing the list of repositories managed by Bari
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file
+
+# Database
+
+Baricadr uses a small SQL database to store some information.
+It uses Flask-migrate to automatically create/update databases. If you modify the models (in `baricadr/db_models.py`), you will need to run the following commands:
+
+```
+docker-compose exec baricadr flask db migrate -m "some comment on what you changed"
+docker-compose exec baricadr flask db upgrade
+```
+
+In testing and development mode, it uses a SQLite database stored in app/data.sqlite

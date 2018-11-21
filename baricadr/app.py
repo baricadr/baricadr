@@ -5,9 +5,12 @@ from celery import Celery
 from flask import Flask, g, render_template
 
 from .api import api
-from .extensions import (celery, db, mail)
+# Import model classes for flaks migrate
+from .db_models import PullTask  # noqa: F401
+from .extensions import (celery, db, mail, migrate)
 from .model import backends
 from .model.repos import Repos
+
 
 __all__ = ('create_app', 'create_celery', )
 
@@ -89,6 +92,7 @@ def blueprints_fabrics(app, blueprints):
 def extensions_fabrics(app):
     db.init_app(app)
     mail.init_app(app)
+    migrate.init_app(app, db)
     celery.config_from_object(app.config)
 
 

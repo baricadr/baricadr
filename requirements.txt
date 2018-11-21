@@ -15,6 +15,7 @@ celery
 
 # SQLAlchemy
 Flask-SQLAlchemy
+flask-migrate
 
 # tests
 pytest

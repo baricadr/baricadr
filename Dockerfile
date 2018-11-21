@@ -37,4 +37,6 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 COPY . /baricadr
 WORKDIR /baricadr
 
-CMD ["/usr/bin/supervisord"]
+COPY start_baricadr.sh /start_baricadr.sh
+
+ENTRYPOINT "/start_baricadr.sh"

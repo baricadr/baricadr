@@ -98,7 +98,7 @@ class SftpBackend(RcloneBackend):
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
         # TODO detect if file or dir
         dest = "%s" % (path)
-        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)  # FIXME check quotes
+        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
         if retcode != 0:

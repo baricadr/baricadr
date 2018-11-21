@@ -1,3 +1,7 @@
+import os
+
+from baricadr.db_models import PullTask
+
 from celery.result import AsyncResult
 
 from email_validator import EmailNotValidError, validate_email
@@ -15,9 +19,9 @@ def pull_files():
     if 'path' not in request.json:
         return jsonify({'error': 'Missing "path"'}), 400
 
-    # TODO normalize path
+    # Normalize path
+    asked_path = os.path.abspath(request.json['path'])
 
-    # TODO check email is valid
     email = None
     if 'email' in request.json:
         email = request.json['email']
@@ -28,9 +32,24 @@ def pull_files():
         except EmailNotValidError as e:
             return jsonify({'error': str(e)}), 400
 
-    task = celery.send_task('pull_file', (request.json['path'], email))
+    if 'path' not in request.json:
+        return jsonify({'error': 'Missing "path"'}), 400
 
-    return jsonify({'tasks': task.task_id})
+    # Check if we're already pulling the file
+    pulling_task_id = current_app.repos.is_pulling(asked_path)
+    if pulling_task_id:
+        current_app.logger.info("Already pulling '%s' in task '%s', no new task." % (asked_path, pulling_task_id))
+        task_id = pulling_task_id
+    else:
+        task = celery.send_task('pull_file', (asked_path, email))
+        task_id = task.task_id
+
+        # Save a reference to this task in db
+        pt = PullTask(path=asked_path, task_id=task_id)
+        current_app.db.session.add(pt)
+        current_app.db.session.commit()
+
+    return jsonify({'tasks': task_id})
 
 
 @api.route('/status/<task_id>', methods=['GET'])
