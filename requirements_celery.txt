@@ -1,7 +1,7 @@
 # Minimal dependencies for celery workers
 celery
 flower
-redis
+redis <3
 
 Flask
 Flask-Mail

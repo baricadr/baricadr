@@ -10,7 +10,7 @@ requests
 email_validator
 
 # Celery
-redis
+redis <3
 celery
 
 # SQLAlchemy
