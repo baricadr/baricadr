@@ -54,3 +54,5 @@ docs/_build
 
 # pytest
 .pytest_cache
+
+supervisord.pid
