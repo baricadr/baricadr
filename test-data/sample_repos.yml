@@ -1,13 +1,20 @@
-/tmp/some/local/path:
+/repos/some/local/path:
     backend: sftp
     url: sftp:/prefix/on/remote/host
     user: foo
     password: pass
 #- exclude: *xml
 
-/tmp/another/local/path:
+/repos/another/local/path:
     backend: s3
     url: google
     user: someone
     password: xxxxx
     #- exclude: *xml
+
+/repos/test_repo/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+#- exclude: *xml

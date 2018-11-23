@@ -1,6 +1,3 @@
-from os.path import abspath, dirname
-
-
 class BaseConfig(object):
     DEBUG = False
     TESTING = False
@@ -27,7 +24,7 @@ class DevelopmentConfig(BaseConfig):
     MAIL_USERNAME = 'your@email.address'
     MAIL_SUPPRESS_SEND = False  # enabling TESTING above sets this one to True, which we don't want as we use mailhog
 
-    SQLALCHEMY_DATABASE_URI = 'sqlite:////%s/data.sqlite' % dirname(abspath(__file__))
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@db/postgres'
     SQLALCHEMY_ECHO = True
 
 
@@ -35,8 +32,8 @@ class TestingConfig(BaseConfig):
     DEBUG = False
     TESTING = True
 
-    SQLALCHEMY_DATABASE_URI = 'sqlite:////%s/data.sqlite' % dirname(abspath(__file__))
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@db/postgres'
+    SQLALCHEMY_ECHO = False
 
 
 class ProdConfig(BaseConfig):

@@ -11,7 +11,8 @@ services:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
         volumes:
-            - ./:/baricadr/
+            - repos:/repos/
+            - ./:/baricadr/:ro
             - ./docker/uwsgi_dev.ini:/etc/uwsgi/uwsgi.ini:ro
 
     worker:
@@ -26,6 +27,7 @@ services:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
         volumes:
+            - repos:/repos/
             - ./:/baricadr/:ro
             - ./docker_celery/celery_dev_launch.py:/opt/celery_dev_launch.py:ro
 
@@ -59,3 +61,10 @@ services:
         command: foo:pass:1001
         volumes:
             - ./test-data/test-repo/:/home/foo/test-repo/:ro
+
+    db:
+        image: postgres:11-alpine
+
+volumes:
+    # A volume shared between baricadr app and worker
+    repos:

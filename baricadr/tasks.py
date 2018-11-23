@@ -15,7 +15,9 @@ celery = create_celery(app)
 
 
 @celery.task(bind=True, name="pull_file")
-def pull_file(self, path, email=None):
+def pull_file(self, path, email=None, task_id=None):
+
+    app.logger.debug("Pulling path '%s'" % (path))
 
     self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
@@ -27,6 +29,10 @@ def pull_file(self, path, email=None):
 
     # TODO check md5
 
+    app.logger.debug("Deleting task '%s' from db" % task_id)
+    PullTask.query.filter_by(task_id=pull_file.request.id).delete()
+    db.session.commit()
+
     self.update_state(state='PROGRESS', meta={'status': 'success'})
 
     if email:
@@ -37,7 +43,6 @@ def pull_file(self, path, email=None):
         mail.send(msg)
 
 
-# TODO call this on startup and regularly
 @celery.task(bind=True, name="cleanup_zombie_tasks")
 def cleanup_zombie_tasks(self):
     """
@@ -50,13 +55,21 @@ def cleanup_zombie_tasks(self):
     num = 0
     running_tasks = PullTask.query.all()
     for rt in running_tasks:
-        status = baricadr.api.status_pull(rt.task_id)
-        if status['finished'] == "true":
+        app.logger.debug("Checking zombie for task '%s' on path '%s'" % (rt.task_id, rt.path))
+        failed_status = False
+        try:
+            status = baricadr.api.status_pull(rt.task_id).json
+        except:  # noqa: E722
+            failed_status = True
+
+        if failed_status or (status['finished'] == "true"):
             app.logger.warning("Detected zombie task '%s' for path '%s'" % (rt.task_id, rt.path))
             # TODO auto reschedule zombies instead of just removing them?
-            app.db.session.delete(rt)
-            app.db.session.commit()
+            db.session.delete(rt)
+            db.session.commit()
             num += 1
+
+    app.logger.debug("%s zombie tasks killed (%s remaining)" % (num, len(running_tasks) - num))
 
     self.update_state(state='PROGRESS', meta={'status': '%s zombie tasks killed (%s remaining)' % (num, len(running_tasks) - num)})
 

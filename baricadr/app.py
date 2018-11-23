@@ -24,6 +24,7 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None)
                 static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'),
                 template_folder="templates"
                 )
+
     with app.app_context():
         configs = {
             "dev": "baricadr.config.DevelopmentConfig",

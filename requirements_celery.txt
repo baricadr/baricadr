@@ -12,6 +12,7 @@ Werkzeug
 requests
 Flask-SQLAlchemy
 flask-migrate
+psycopg2
 email_validator
 
 
