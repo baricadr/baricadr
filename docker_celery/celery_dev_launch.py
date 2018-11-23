@@ -7,7 +7,9 @@ I did this because Celery worker's "--autoreload" option seems not working for a
 import os
 import subprocess
 import time
+
 import psutil
+
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
@@ -17,7 +19,6 @@ celery_cmdline = '/usr/bin/celery -A baricadr.tasks.celery worker --loglevel=inf
 
 
 class MyHandler(PatternMatchingEventHandler):
-
     def on_any_event(self, event):
         print("detected change. event = {}".format(event))
 
@@ -50,7 +51,7 @@ def run_worker():
     print("Ready to call {} ".format(celery_cmdline))
     os.chdir(celery_working_dir)
     subprocess.Popen(celery_cmdline)
-    print("Done callling {} ".format(celery_cmdline))
+    print("Done calling {} ".format(celery_cmdline))
 
 
 if __name__ == '__main__':
