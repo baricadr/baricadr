@@ -18,6 +18,7 @@ jobs:
       python: '3.5'
       install:
         - sudo service postgresql stop
+        - cp local.example.cfg local.cfg
         - docker-compose build
         - docker-compose up -d
         - sleep 15 # Wait for the container to be ready
@@ -28,6 +29,7 @@ jobs:
       python: '3.6'
       install:
         - sudo service postgresql stop
+        - cp local.example.cfg local.cfg
         - docker-compose build
         - docker-compose up -d
         - sleep 15 # Wait for the container to be ready
