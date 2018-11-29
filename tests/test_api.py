@@ -200,6 +200,36 @@ class TestApi(BaricadrTestCase):
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
+    def test_pull_local_del(self, app, client):
+        """
+        Try to pull a dir containing some locally deleted data
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'subfile content\n'
+
+        # delete a file from local repo
+        os.unlink(repo_dir + '/subfile.txt')
+
+        # Try to pull a dir already pulled just before
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'subfile content\n'
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
     def pull_and_wait(self, client, path):
         data = {
             'path': path
@@ -228,10 +258,9 @@ class TestApi(BaricadrTestCase):
 
         assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
 
-# TODO test local modification of a file, local deletion of a file
 # TODO test local modification but older file
 # TODO test pulling /
-# TODO see if we should use --ignore-existing
 # TODO test checksum
 # TODO test emails
 # TODO test excludes
+# TODO implement freezing tasks
