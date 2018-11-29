@@ -8,6 +8,9 @@ from . import BaricadrTestCase
 class TestApi(BaricadrTestCase):
 
     def test_pull_missing_path(self, client):
+        """
+        Pull without a proper path
+        """
         data = {
             'files': '/foo/bar'
         }
@@ -17,6 +20,9 @@ class TestApi(BaricadrTestCase):
         assert response.json == {'error': 'Missing "path"'}
 
     def test_pull_wrong_email(self, client):
+        """
+        Pull with wrong email address
+        """
         data = {
             'path': '/foo/bar',
             'email': 'x'
@@ -27,6 +33,9 @@ class TestApi(BaricadrTestCase):
         assert response.json == {"error": "The email address is not valid. It must have exactly one @-sign."}
 
     def test_get_status_unknown(self, client):
+        """
+        Get status from a non-existing task
+        """
         response = client.get('/status/foobar')
 
         # TODO maybe we should send a 404 error, but celery can't say if the task is finished or doesn't exist
@@ -34,6 +43,9 @@ class TestApi(BaricadrTestCase):
         assert response.status_code == 200
 
     def test_pull_success(self, app, client):
+        """
+        Try to pull a dir in normal conditions
+        """
 
         repo_dir = '/repos/test_repo/subdir'
         if os.path.exists(repo_dir):
@@ -74,6 +86,9 @@ class TestApi(BaricadrTestCase):
             shutil.rmtree(repo_dir)
 
     def test_pull_race(self, app, client):
+        """
+        Try to pull a dir twice at the same time
+        """
 
         repo_dir = '/repos/test_repo/subdir'
         if os.path.exists(repo_dir):
@@ -124,6 +139,9 @@ class TestApi(BaricadrTestCase):
             shutil.rmtree(repo_dir)
 
     def test_pull_twice(self, app, client):
+        """
+        Try to pull a subdr already pulled just before
+        """
 
         repo_dir = '/repos/test_repo/subdir'
         if os.path.exists(repo_dir):
@@ -192,6 +210,9 @@ class TestApi(BaricadrTestCase):
             shutil.rmtree(repo_dir)
 
     def test_pull_local_add(self, app, client):
+        """
+        Try to pull a dir containing other local-only dat
+        """
 
         repo_dir = '/repos/test_repo/subdir'
         if os.path.exists(repo_dir):
@@ -224,7 +245,7 @@ class TestApi(BaricadrTestCase):
 
         assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
 
-        # Copy a file in local repo
+        # Copy a local-only file in local repo
         shutil.copyfile(repo_dir + '/subfile.txt', repo_dir + '/local_new_file.txt')
 
         # Try to pull a file already pulled just before
