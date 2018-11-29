@@ -58,6 +58,8 @@ Baricadr will never touch remote data.
 When pulling, it will try to respect as much as possible the local data compared to the remote one, which means:
 
 - No risk of multiple pulls at once on the same directory.
+  - If one or several subdirs are being pulled, pulling an upper directory will be delayed until subdirs are finished.
+  - If a dir is being pulled, no new transfer will be launched when asking to pull a subdir
 - When pulling, if a file was modified locally, it will be kept untouched.
 - When pulling, if a file was deleted manually locally, it will be downloaded.
 
