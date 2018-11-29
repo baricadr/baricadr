@@ -136,7 +136,7 @@ class TestApi(BaricadrTestCase):
 
     def test_pull_local_add(self, app, client):
         """
-        Try to pull a dir containing other local-only dat
+        Try to pull a dir containing other local-only data
         """
 
         repo_dir = '/repos/test_repo/subdir'
@@ -155,6 +155,47 @@ class TestApi(BaricadrTestCase):
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
         assert os.path.exists(repo_dir + '/local_new_file.txt')
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_local_mod(self, app, client):
+        """
+        Try to pull a dir containing some locally modified data
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'subfile content\n'
+
+        # Modify in local repo
+        with open(repo_dir + '/subfile.txt', 'w') as local_file:
+            local_file.write('This was touched locally\n')
+
+        # Try to pull a file already pulled just before
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'This was touched locally\n'
+
+        # Modify in local repo with a very short string
+        with open(repo_dir + '/subfile.txt', 'w') as local_file:
+            local_file.write('This\n')
+
+        # Try to pull a file already pulled just before
+        self.pull_and_wait(client, repo_dir)
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'This\n'
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -188,6 +229,7 @@ class TestApi(BaricadrTestCase):
         assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
 
 # TODO test local modification of a file, local deletion of a file
+# TODO test local modification but older file
 # TODO test pulling /
 # TODO see if we should use --ignore-existing
 # TODO test checksum

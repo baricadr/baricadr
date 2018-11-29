@@ -96,9 +96,10 @@ class SftpBackend(RcloneBackend):
         rel_path = repo.relative_path(path)
 
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
-        # TODO detect if file or dir
+        # TODO detect if file or dir  -> WHY? I don't remember
         dest = "%s" % (path)
-        cmd = "rclone copy --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
+        # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
+        cmd = "rclone copy --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, dest, self.user, obscure_password)
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
         if retcode != 0:
