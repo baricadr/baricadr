@@ -265,5 +265,7 @@ class TestApi(BaricadrTestCase):
 
 
 # TODO test local modification of a file, local deletion of a file
+# TODO test pulling /
+# TODO see if we shold use --ignore-existing
 # TODO test checksum
 # TODO test emails
