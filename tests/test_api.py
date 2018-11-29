@@ -350,5 +350,5 @@ class TestApi(BaricadrTestCase):
 # TODO test checksum
 # TODO test emails
 # TODO test excludes
-# TODO implement freezing tasks
+# TODO implement freezing tasks (manual and automatic)
 # TODO force option for pull to allow replacing locally modified file?
