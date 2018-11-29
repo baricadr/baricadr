@@ -8,6 +8,8 @@ Baricadr is a small application designed to:
 - Only keep used files in the local copy
 - Download data on demand into the local copy
 
+The remote is considered to be a full remote backup of the data (but other use cases are possible).
+
 It is a prototype and not yet ready for production.
 
 It was originally designed for the BBRIC/BARIC CATI at INRA, with the AgroDataRing project.
@@ -56,8 +58,10 @@ Baricadr will never touch remote data.
 When pulling, it will try to respect as much as possible the local data compared to the remote one, which means:
 
 - No risk of multiple pulls at once on the same directory.
-- When pulling, if a file was modified locally, it will be kept untouched as long as its modification time is younger than the remote file. If the local file is older, it will be replaced.
+- When pulling, if a file was modified locally, it will be kept untouched.
 - When pulling, if a file was deleted manually locally, it will be downloaded.
+
+We consider that if a local file was modified, it will end up being propagated to the remote during the next backup.
 
 # Configuring
 
