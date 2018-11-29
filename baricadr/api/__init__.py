@@ -37,13 +37,16 @@ def pull_files():
         return jsonify({'error': 'Missing "path"'}), 400
 
     # Check if we're already pulling the file
-    pulling_task_id = current_app.repos.is_pulling(asked_path)
+    pulling_task_id = current_app.repos.is_already_pulling(asked_path)
     if pulling_task_id:
         current_app.logger.info("Already pulling '%s' in task '%s', no new task." % (asked_path, pulling_task_id))
         task_id = pulling_task_id
     else:
-        task = current_app.celery.send_task('pull_file', (asked_path, email))
+        locking_task_id = current_app.repos.is_locked_by_subdir(asked_path)
+
+        task = current_app.celery.send_task('pull_file', (asked_path, email, locking_task_id))
         task_id = task.task_id
+        current_app.logger.info("Created pull task %s" % task_id)
 
         # Save a reference to this task in db
         pt = PullTask(path=asked_path, task_id=task_id)

@@ -96,7 +96,11 @@ class Repos():
 
         raise RuntimeError('Could not find baricadr repository for path "%s"' % path)
 
-    def is_pulling(self, path):
+    def is_already_pulling(self, path):
+        """
+        If a task is already pulling path or an upper directory, returns the task id.
+        Return False otherwise.
+        """
 
         running_tasks = PullTask.query.all()
         for rt in running_tasks:
@@ -104,3 +108,17 @@ class Repos():
                 return rt.task_id
 
         return False
+
+    def is_locked_by_subdir(self, path):
+        """
+        If some tasks are already pulling a subdirectory of path, returns the list of task ids.
+        Return an empty list otherwise.
+        """
+
+        running_tasks = PullTask.query.all()
+        locking = []
+        for rt in running_tasks:
+            if rt.path.startswith(path) and path != rt.path:
+                locking.append(rt.task_id)
+
+        return locking

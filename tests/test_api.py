@@ -69,23 +69,8 @@ class TestApi(BaricadrTestCase):
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
-        data = {
-            'path': repo_dir
-        }
-        response = client.post('/pull', json=data)
-
-        assert response.status_code == 200
-        assert 'task' in response.json
-
-        pull_id = response.json['task']
-
-        # Ask immediately, the first one should not be finished yet
-        response = client.post('/pull', json=data)
-
-        assert response.status_code == 200
-        assert 'task' in response.json
-
-        pull_id_2 = response.json['task']
+        pull_id = self.pull_quick(client, repo_dir)
+        pull_id_2 = self.pull_quick(client, repo_dir)
 
         assert pull_id == pull_id_2
 
@@ -105,6 +90,69 @@ class TestApi(BaricadrTestCase):
             wait += 1
 
         assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_race_subdir(self, app, client):
+        """
+        Try to pull a dir and subdir at the same time
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        pull_id = self.pull_quick(client, repo_dir)
+        pull_id_2 = self.pull_quick(client, repo_dir + '/subsubdir')
+
+        assert pull_id == pull_id_2
+
+        # Wait for the task to run
+        wait = 0
+        while wait < 10:
+            sleep(2)
+
+            response = client.get('/status/%s' % pull_id)
+
+            assert response.status_code == 200
+
+            if response.json['finished'] == "true":
+                break
+            else:
+                assert response.json['error'] == 'false'
+            wait += 1
+
+        assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_race_updir(self, app, client):
+        """
+        Try to pull a dir and subdir at the same time
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        pull_id = self.pull_quick(client, repo_dir + '/subsubdir')
+        pull_id_2 = self.pull_quick(client, repo_dir)
+
+        assert pull_id != pull_id_2
+
+        # Wait for the tasks to run
+        self.wait_for_pull(client, pull_id)
+        self.wait_for_pull(client, pull_id_2)
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -264,7 +312,7 @@ class TestApi(BaricadrTestCase):
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
-    def pull_and_wait(self, client, path):
+    def pull_quick(self, client, path):
         data = {
             'path': path
         }
@@ -273,8 +321,9 @@ class TestApi(BaricadrTestCase):
         assert response.status_code == 200
         assert 'task' in response.json
 
-        pull_id = response.json['task']
+        return response.json['task']
 
+    def wait_for_pull(self, client, pull_id):
         # Wait for the task to run
         wait = 0
         while wait < 10:
@@ -292,7 +341,12 @@ class TestApi(BaricadrTestCase):
 
         assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
 
-# TODO test pulling at higher or lower level than already pulling
+    def pull_and_wait(self, client, path):
+
+        pull_id = self.pull_quick(client, path)
+        self.wait_for_pull(client, pull_id)
+
+# TODO better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
 # TODO test checksum
 # TODO test emails
 # TODO test excludes
