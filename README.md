@@ -49,6 +49,16 @@ docker-compose exec baricadr pytest -v --log-cli-level debug
 
 With pull-id = the return of the pull POST call above
 
+# What will it do to my data?
+
+Baricadr will never touch remote data.
+
+When pulling, it will try to respect as much as possible the local data compared to the remote one, which means:
+
+- No risk of multiple pulls at once on the same directory.
+- When pulling, if a file was modified locally, it will be kept untouched as long as its modification time is younger than the remote file. If the local file is older, it will be replaced.
+- When pulling, if a file was deleted manually locally, it will be downloaded.
+
 # Configuring
 
 There are 3 run mode for baricadr: `dev`, `test` and `prod`.
