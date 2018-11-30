@@ -56,6 +56,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -94,6 +95,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -132,6 +134,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -157,6 +160,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -178,6 +182,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -202,6 +207,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
         assert os.path.exists(repo_dir + '/local_new_file.txt')
 
         if os.path.exists(repo_dir):
@@ -231,6 +237,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         with open(repo_dir + '/subfile.txt', 'r') as local_file:
             assert local_file.readline() == 'This was touched locally\n'
@@ -271,6 +278,7 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         with open(repo_dir + '/subfile.txt', 'r') as local_file:
             assert local_file.readline() == 'subfile content\n'
@@ -305,9 +313,50 @@ class TestApi(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
         with open(repo_dir + '/subfile.txt', 'r') as local_file:
             assert local_file.readline() == 'This was touched locally\n'
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_exclude(self, app, client):
+        """
+        Try to pull a dir with an exclude rule
+        """
+
+        repo_dir = '/repos/test_repo_exclude/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert not os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.tsv')
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_exclude_multiple(self, app, client):
+        """
+        Try to pull a dir with an exclude rule
+        """
+
+        repo_dir = '/repos/test_repo_exclude_multiple/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert not os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+        assert not os.path.exists(repo_dir + '/subsubdir/poutrelle.tsv')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -349,6 +398,5 @@ class TestApi(BaricadrTestCase):
 # TODO better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
 # TODO test checksum
 # TODO test emails
-# TODO test excludes
 # TODO implement freezing tasks (manual and automatic)
-# TODO force option for pull to allow replacing locally modified file?
+# TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?

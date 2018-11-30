@@ -23,7 +23,9 @@ class Repo():
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
     def is_in_repo(self, path):
-        return path.startswith(self.local_path)
+        path = os.path.join(path, "")
+
+        return path.startswith(os.path.join(self.local_path, ""))
 
     def pull(self, path):
         self.backend.pull(self, path)
@@ -76,6 +78,9 @@ class Repos():
 
     def _is_subdir_of(self, path1, path2):
 
+        path1 = os.path.join(path1, "")
+        path2 = os.path.join(path2, "")
+
         if path1 == path2:
             return True
 
@@ -89,6 +94,8 @@ class Repos():
         return False
 
     def get_repo(self, path):
+
+        path = os.path.join(path, "")
 
         for repo in self.repos:
             if self.repos[repo].is_in_repo(path):

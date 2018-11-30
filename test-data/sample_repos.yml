@@ -3,18 +3,29 @@
     url: sftp:/prefix/on/remote/host
     user: foo
     password: pass
-#- exclude: *xml
 
 /repos/another/local/path:
     backend: s3
     url: google
     user: someone
     password: xxxxx
-    #- exclude: *xml
 
 /repos/test_repo/:
     backend: sftp
     url: sftp:test-repo
     user: foo
     password: pass
-#- exclude: *xml
+
+/repos/test_repo_exclude/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    exclude: "*xml"
+
+/repos/test_repo_exclude_multiple/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    exclude: "*xml , *tsv"
