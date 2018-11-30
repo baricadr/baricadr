@@ -62,7 +62,7 @@ class RcloneBackend(Backend):
         """
         Generate obscure password to connect to distant server
         """
-        cmd = "rclone obscure %s" % clear_pass  # FIXME check quotes, risk of injection, could we use stdin?
+        cmd = "rclone obscure '%s'" % clear_pass
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
