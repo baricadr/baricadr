@@ -1,11 +1,9 @@
-#/bin/bash
+#!/bin/bash
 
 ###  connect to database
-echo
 echo "=> Trying to connect to the database"
 
-DB_DRIVER=pgsql
-DB_HOST=postgres
+DB_HOST=db
 : ${DB_PORT:='5432'}
 : ${DB_NAME:='postgres'}
 : ${DB_USER:='postgres'}
