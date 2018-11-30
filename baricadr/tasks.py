@@ -41,7 +41,8 @@ def pull_file(self, path, email=None, wait_for=[]):
 
         self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
-        asked_path = os.path.abspath(path)  # FIXME use realpath to resolve symlinks?
+        # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
+        asked_path = os.path.abspath(path)
 
         repo = app.repos.get_repo(asked_path)
         self.update_state(state='PROGRESS', meta={'status': 'pulling'})
