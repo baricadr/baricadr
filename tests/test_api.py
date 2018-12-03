@@ -361,10 +361,12 @@ class TestApi(BaricadrTestCase):
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
-    def pull_quick(self, client, path):
+    def pull_quick(self, client, path, email=None):
         data = {
             'path': path
         }
+        if email:
+            data['email'] = email
         response = client.post('/pull', json=data)
 
         assert response.status_code == 200
@@ -397,6 +399,6 @@ class TestApi(BaricadrTestCase):
 
 # TODO better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
 # TODO test checksum
-# TODO test emails
 # TODO implement freezing tasks (manual and automatic)
+# TODO store in db the freezed file => consult it with baricadr ls
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
