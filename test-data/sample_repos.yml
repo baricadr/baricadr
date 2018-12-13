@@ -29,3 +29,10 @@
     user: foo
     password: pass
     exclude: "*xml , *tsv"
+
+/repos/test_repo_freeze_age/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    freeze_age: 10

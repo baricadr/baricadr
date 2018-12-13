@@ -108,3 +108,74 @@ class TestRepos(BaricadrTestCase):
             app.repos.read_conf_from_str(str(conf))
 
             assert os.path.exists(local_path_not_exist)
+
+    def test_freeze_age(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'freeze_age': 12
+            },
+        }
+
+        repos = app.repos.do_read_conf(str(conf))
+        repo = repos['/foo/bar']
+        assert repo.freeze_age == 12
+
+    def test_freeze_age_str(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'freeze_age': 'xxxx'
+            },
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))
+
+    def test_freeze_age_none(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+            },
+        }
+
+        repos = app.repos.do_read_conf(str(conf))
+        repo = repos['/foo/bar']
+        assert repo.freeze_age == 180
+
+    def test_freeze_age_small(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'freeze_age': 1
+            },
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))
+
+    def test_freeze_age_big(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'freeze_age': 100000
+            },
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))

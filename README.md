@@ -91,6 +91,7 @@ You should write a yaml file containing the list of repositories managed by Bari
     user: someone
     password: xxxxx
     exclude: *xml
+    freeze_age: 365   # By default baricadr will "freeze" files older than 180 days (6 months). You can change this limit with this parameter.
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file

@@ -19,6 +19,17 @@ class Repo():
         if 'exclude' in conf:
             self.exclude = conf['exclude']
         self.conf = conf
+        self.freeze_age = 180
+        if 'freeze_age' in conf:
+            try:
+                conf['freeze_age'] = int(conf['freeze_age'])
+            except ValueError:
+                raise ValueError("Malformed repository definition, freeze_age must be an integer in '%s'" % conf)
+
+            if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
+                raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
+
+            self.freeze_age = conf['freeze_age']
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
