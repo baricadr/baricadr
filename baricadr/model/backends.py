@@ -75,6 +75,41 @@ class RcloneBackend(Backend):
 
         return obscure_password
 
+    def remote_is_single(self, repo, path):
+        """
+        Check if distant path is a single file or not
+        """
+        obscure_password = self.obscurify_password(self.password)
+        tempRcloneConfig = self.temp_rclone_config()
+
+        rel_path = repo.relative_path(path)
+
+        src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
+
+        cmd = "rclone ls --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s' | wc -l" % (tempRcloneConfig.name, src, self.user, obscure_password)
+        current_app.logger.info(cmd)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        retcode = p.returncode
+        remote_list = output.decode('ascii').strip('\n')
+        if retcode != 0:
+            current_app.logger.error(output)
+            current_app.logger.error(err)
+            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password")
+
+        tempRcloneConfig.close()
+
+        return remote_list == '1'
+
+    def temp_rclone_config(self):
+        tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
+        tempRcloneConfig.write('[' + self.name + ']\n')
+        tempRcloneConfig.write('type = ' + self.name + '\n')
+        tempRcloneConfig.write('host = ' + self.remote_host + '\n')
+        tempRcloneConfig.seek(0)
+
+        return tempRcloneConfig
+
 
 class SftpBackend(RcloneBackend):
     def __init__(self, conf):
@@ -87,11 +122,11 @@ class SftpBackend(RcloneBackend):
 
     def pull(self, repo, path):
         obscure_password = self.obscurify_password(self.password)
-        tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
-        tempRcloneConfig.write('[' + self.name + ']\n')
-        tempRcloneConfig.write('type = ' + self.name + '\n')
-        tempRcloneConfig.write('host = ' + self.remote_host + '\n')
-        tempRcloneConfig.seek(0)
+        tempRcloneConfig = self.temp_rclone_config()
+
+        rclone_cmd = 'copy'
+        if self.remote_is_single(repo, path):
+            rclone_cmd = 'copyto'
 
         rel_path = repo.relative_path(path)
 
@@ -105,7 +140,7 @@ class SftpBackend(RcloneBackend):
                 ex_options += " --exclude '%s'" % ex.strip()
 
         # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
-        cmd = "rclone copy --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
+        cmd = "rclone %s --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
         current_app.logger.debug("Running command: %s" % cmd)
         retcode = call(cmd, shell=True)
         if retcode != 0:

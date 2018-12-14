@@ -39,7 +39,10 @@ class Repo():
         return path.startswith(os.path.join(self.local_path, ""))
 
     def pull(self, path):
-        self.backend.pull(self, path)
+        return self.backend.pull(self, path)
+
+    def remote_is_single(self, path):
+        return self.backend.remote_is_single(self, path)
 
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
