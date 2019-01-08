@@ -39,6 +39,13 @@ If you need more details and debug logs:
 docker-compose exec baricadr pytest -v --log-cli-level debug
 ```
 
+To run some specific tests:
+
+```
+docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends.py
+docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends.py -k test_remote_list_sftp
+```
+
 # Using it
 
 ## Triggering a "pull"
