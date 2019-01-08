@@ -201,6 +201,7 @@ class TestRepos(BaricadrTestCase):
 
             repo = app.repos.get_repo(single_file)
             repo.pull(single_file)
+            self.set_old_atime(local_path)
 
             assert os.path.exists(local_path + '/file.txt')
 
@@ -238,6 +239,8 @@ class TestRepos(BaricadrTestCase):
 
             repo = app.repos.get_repo(whole_dir)
             repo.pull(whole_dir)
+
+            self.set_old_atime(local_path)
 
             freezed = repo.freeze(local_path)
 
@@ -279,6 +282,8 @@ class TestRepos(BaricadrTestCase):
 
             repo = app.repos.get_repo(whole_dir)
             repo.pull(whole_dir)
+
+            self.set_old_atime(local_path)
 
             expected_freezed = [
                 local_path + '/file.txt',
@@ -348,6 +353,8 @@ class TestRepos(BaricadrTestCase):
             repo = app.repos.get_repo(whole_dir)
             repo.pull(whole_dir)
 
+            self.set_old_atime(local_path)
+
             expected_freezed = [
                 local_path + '/file.txt',
                 local_path + '/file2.txt',
@@ -415,6 +422,8 @@ class TestRepos(BaricadrTestCase):
             repo = app.repos.get_repo(whole_dir)
             repo.pull(whole_dir)
 
+            self.set_old_atime(local_path)
+
             freezed = repo.freeze(local_path, dry_run=True)
 
             expected_freezed = [
@@ -458,10 +467,8 @@ class TestRepos(BaricadrTestCase):
             # Copy a local-only file in local repo
             copied_file = local_path + '/subdir/subfile.txt'
             local_file = local_path + '/subdir/local_new_file.txt'
-            old_time = os.stat(copied_file).st_atime - (500 * 3600)
             shutil.copyfile(copied_file, local_file)
-            os.utime(copied_file, (old_time, old_time))
-            os.utime(local_file, (old_time, old_time))
+            self.set_old_atime(local_path)
             assert os.path.exists(local_file)
 
             freezed = repo.freeze(local_path)
@@ -524,3 +531,15 @@ class TestRepos(BaricadrTestCase):
 
             with pytest.raises(RuntimeError):
                 repo.freeze(local_file)
+
+    # TODO test with some files old, some others not
+
+    def set_old_atime(self, path):
+        """
+        Make sure that all files in given directory have an old access time
+        """
+        for root, subdirs, files in os.walk(path):
+            for name in files:
+                candidate = os.path.join(root, name)
+                old_time = os.stat(candidate).st_atime - (500 * 3600)
+                os.utime(candidate, (old_time, old_time))
