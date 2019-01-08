@@ -1,3 +1,5 @@
+import datetime
+import fnmatch
 import os
 
 from baricadr.db_models import PullTask
@@ -46,6 +48,100 @@ class Repo():
 
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
+
+    def freeze(self, path, force=False, dry_run=False):
+        """
+        Remove files from local repository
+
+        :type path: str
+        :param path: Path where baricadr should freeze files
+
+        :type force: bool
+        :param force: Force freezing path, even if files were accessed recently.
+
+        :type dry_run: bool
+        :param dry_run: Do not remove anything, just print what would be done in normal mode.
+
+        :rtype: list
+        :return: list of freezed files
+        """
+
+        # TODO handle deletion of directories too?
+        # TODO keep track of md5 if needed for checking
+        # TODO check that local file is on remote (if freezing before backup)
+        # TODO should we allow to force freeze?
+        # TODO test at startup that atime is supported in the repo (can be disabled in fstab)
+
+        current_app.logger.info("Asked to freeze '%s'" % path)
+
+        freezables = self._get_freezable(path, force)
+
+        current_app.logger.info("Freezable files: %s" % freezables)
+
+        for to_freeze in freezables:
+            if dry_run:
+                current_app.logger.info("Would freeze '%s' (dry-run mode)" % (to_freeze))
+            else:
+                current_app.logger.info("Freezing '%s'" % (to_freeze))
+                self._do_freeze(to_freeze)
+
+        return freezables
+
+    def _get_freezable(self, path, force=False):
+        freezables = []
+
+        excludes = []
+        if self.exclude:
+            excludes = self.exclude.split(',')
+
+        if os.path.exists(path) and os.path.isfile(path):
+            for ex in excludes:
+                if fnmatch.fnmatch(path, ex.strip()):
+                    return
+            if force or self._can_freeze(path):
+                freezables.append(path)
+        else:
+            for root, subdirs, files in os.walk(path):
+                for name in files:
+                    candidate = os.path.join(root, name)
+                    excluded = False
+                    for ex in excludes:
+                        if fnmatch.fnmatch(candidate, ex.strip()):
+                            excluded = True
+                            break
+                    if not excluded and (force or self._can_freeze(candidate)):
+                        freezables.append(candidate)
+
+        return freezables
+
+    def _can_freeze(self, file_to_check):
+        """
+        Check if a file should be freezed or not
+
+        :type path: str
+        :param path: Path of a file to check
+
+        :rtype: bool
+        :return: True if the file should be freezed
+        """
+
+        last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()
+        now = datetime.date.today()
+        delta = now - last_access
+        delta = delta.days
+        current_app.logger.info("Checking if we should freeze '%s': last accessed on %s (%s days ago)" % (file_to_check, last_access, delta))
+
+        return delta > self.freeze_age
+
+    def _do_freeze(self, file_to_freeze):
+        """
+        Removes a cold file from local repository
+
+        :type path: str
+        :param path: Path of a file to freeze
+        """
+
+        os.unlink(file_to_freeze)
 
 
 class Repos():
