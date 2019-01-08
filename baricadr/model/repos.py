@@ -81,14 +81,17 @@ class Repo():
 
         # TODO handle deletion of directories too?
         # TODO keep track of md5 if needed for checking
-        # TODO check that local file is on remote (if freezing before backup)
+        # TODO check rclone check -> does it work without hash support with sftp in rclone?
         # TODO should we allow to force freeze?
+        # TODO test force mode
         # TODO test at startup that atime is supported in the repo (can be disabled in fstab)
         # TODO expose freeze in api ?
 
         current_app.logger.info("Asked to freeze '%s'" % path)
 
-        freezables = self._get_freezable(path, force)
+        remote_list = self.remote_list(path)
+
+        freezables = self._get_freezable(path, remote_list, force)
 
         current_app.logger.info("Freezable files: %s" % freezables)
 
@@ -101,7 +104,7 @@ class Repo():
 
         return freezables
 
-    def _get_freezable(self, path, force=False):
+    def _get_freezable(self, path, remote_list, force=False):
         freezables = []
 
         excludes = []
@@ -112,7 +115,7 @@ class Repo():
             for ex in excludes:
                 if fnmatch.fnmatch(path, ex.strip()):
                     return
-            if force or self._can_freeze(path):
+            if (force or self._can_freeze(path)) and (self.relative_path(path) in remote_list):
                 freezables.append(path)
         else:
             for root, subdirs, files in os.walk(path):
@@ -123,7 +126,7 @@ class Repo():
                         if fnmatch.fnmatch(candidate, ex.strip()):
                             excluded = True
                             break
-                    if not excluded and (force or self._can_freeze(candidate)):
+                    if not excluded and (force or self._can_freeze(candidate)) and (self.relative_path(candidate) in remote_list):
                         freezables.append(candidate)
 
         return freezables
