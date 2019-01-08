@@ -85,6 +85,7 @@ class RcloneBackend(Backend):
         return len(remote_list) == 1
 
     # TODO expose remote_list in api ?
+    # TODO we could use the --hash option of lsjson (may be slow, but may be useful)
     def remote_list(self, repo, path, full=False):
         """
         List content in a distant path
@@ -101,11 +102,15 @@ class RcloneBackend(Backend):
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
-        json_output = json.loads(output.decode('ascii'))
+        try:
+            json_output = json.loads(output.decode('ascii'))
+        except json.decoder.JSONDecodeError as e:
+            current_app.logger.error('Failed to parse json output from rclone lsjson: %s' % output.decode('ascii'))
+
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password")
+            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't run rclone lsjon")
 
         current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
 
