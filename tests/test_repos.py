@@ -256,7 +256,7 @@ class TestRepos(BaricadrTestCase):
                 local_path + '/subdir/subsubdir/poutrelle.tsv'
             ]
 
-            assert freezed == expected_freezed
+            assert sorted(freezed) == sorted(expected_freezed)
 
             for exp_freezed in expected_freezed:
                 assert not os.path.exists(exp_freezed)
@@ -323,7 +323,7 @@ class TestRepos(BaricadrTestCase):
 
             freezed = repo.freeze(local_path)
 
-            assert freezed == expected_freezed
+            assert sorted(freezed) == sorted(expected_freezed)
 
             for exp_freezed in expected_freezed:
                 assert not os.path.exists(exp_freezed)
@@ -393,7 +393,7 @@ class TestRepos(BaricadrTestCase):
 
             freezed = repo.freeze(local_path)
 
-            assert freezed == expected_freezed
+            assert sorted(freezed) == sorted(expected_freezed)
 
             for exp_freezed in expected_freezed:
                 assert not os.path.exists(exp_freezed)
@@ -438,7 +438,7 @@ class TestRepos(BaricadrTestCase):
                 local_path + '/subdir/subsubdir/poutrelle.tsv'
             ]
 
-            assert freezed == expected_freezed
+            assert sorted(freezed) == sorted(expected_freezed)
 
             for exp_freezed in expected_freezed:
                 assert os.path.exists(exp_freezed)
