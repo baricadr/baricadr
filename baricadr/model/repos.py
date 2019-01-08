@@ -84,7 +84,6 @@ class Repo():
         # TODO check that local file is on remote (if freezing before backup)
         # TODO should we allow to force freeze?
         # TODO test at startup that atime is supported in the repo (can be disabled in fstab)
-        # TODO test dry-run mode
         # TODO expose freeze in api ?
 
         current_app.logger.info("Asked to freeze '%s'" % path)

@@ -392,3 +392,43 @@ class TestRepos(BaricadrTestCase):
 
             for nexp_freezed in not_expected_freezed:
                 assert os.path.exists(nexp_freezed)
+
+    def test_freeze_dry_run(self, app):
+
+        # First get a local repo
+        with tempfile.TemporaryDirectory() as local_path:
+            whole_dir = local_path
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo/',
+                    'user': 'foo',
+                    'password': 'pass',
+                    'freeze_age': 3
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(whole_dir)
+            repo.pull(whole_dir)
+
+            freezed = repo.freeze(local_path, dry_run=True)
+
+            expected_freezed = [
+                local_path + '/file.txt',
+                local_path + '/file2.txt',
+                local_path + '/subdir/subfile.txt',
+                local_path + '/subdir/subsubdir2/subsubfile.txt',
+                local_path + '/subdir/subsubdir2/poutrelle.xml',
+                local_path + '/subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file',
+                local_path + '/subdir/subsubdir/subsubfile.txt',
+                local_path + '/subdir/subsubdir/poutrelle.xml',
+                local_path + '/subdir/subsubdir/poutrelle.tsv'
+            ]
+
+            assert freezed == expected_freezed
+
+            for exp_freezed in expected_freezed:
+                assert os.path.exists(exp_freezed)
