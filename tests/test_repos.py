@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from datetime import datetime
 
 import pytest
 
@@ -532,7 +533,58 @@ class TestRepos(BaricadrTestCase):
             with pytest.raises(RuntimeError):
                 repo.freeze(local_file)
 
-    # TODO test with some files old, some others not
+    def test_freeze_mixed(self, app):
+
+        # First get a local repo
+        with tempfile.TemporaryDirectory() as local_path:
+            whole_dir = local_path
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo/',
+                    'user': 'foo',
+                    'password': 'pass',
+                    'freeze_age': 3
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(whole_dir)
+            repo.pull(whole_dir)
+
+            self.set_old_atime(local_path)
+
+            accessed_file = local_path + '/subdir/subsubdir2/subsubfile.txt'
+            dt = datetime.today()  # Get timezone naive now
+            now_time = dt.timestamp()
+            os.utime(accessed_file, (now_time, now_time))
+
+            freezed = repo.freeze(local_path)
+
+            expected_freezed = [
+                local_path + '/file.txt',
+                local_path + '/file2.txt',
+                local_path + '/subdir/subfile.txt',
+                local_path + '/subdir/subsubdir2/poutrelle.xml',
+                local_path + '/subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file',
+                local_path + '/subdir/subsubdir/subsubfile.txt',
+                local_path + '/subdir/subsubdir/poutrelle.xml',
+                local_path + '/subdir/subsubdir/poutrelle.tsv'
+            ]
+
+            not_expected_freezed = [
+                local_path + '/subdir/subsubdir2/subsubfile.txt'
+            ]
+
+            assert sorted(freezed) == sorted(expected_freezed)
+
+            for exp_freezed in expected_freezed:
+                assert not os.path.exists(exp_freezed)
+
+            for nexp_freezed in not_expected_freezed:
+                assert os.path.exists(nexp_freezed)
 
     def set_old_atime(self, path):
         """
