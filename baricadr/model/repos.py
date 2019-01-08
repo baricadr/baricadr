@@ -79,7 +79,6 @@ class Repo():
         :return: list of freezed files
         """
 
-        # TODO handle deletion of directories too?
         # TODO keep track of md5 if needed for checking
         # TODO check rclone check -> does it work without hash support with sftp in rclone?
         # TODO should we allow to force freeze?

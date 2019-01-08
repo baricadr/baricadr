@@ -399,6 +399,5 @@ class TestApi(BaricadrTestCase):
 
 # TODO better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
 # TODO test checksum
-# TODO implement freezing tasks (manual and automatic)
 # TODO store in db the freezed file => consult it with baricadr ls
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
