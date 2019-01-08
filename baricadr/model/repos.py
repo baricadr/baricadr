@@ -49,6 +49,19 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
+    def remote_list(self, path, full=False):
+        """
+        List files from remote repository
+
+        :type path: str
+        :param path: Path where baricadr should list files
+
+        :rtype: list
+        :return: list of files
+        """
+
+        return self.backend.remote_list(self, path, full)
+
     def freeze(self, path, force=False, dry_run=False):
         """
         Remove files from local repository
@@ -71,6 +84,8 @@ class Repo():
         # TODO check that local file is on remote (if freezing before backup)
         # TODO should we allow to force freeze?
         # TODO test at startup that atime is supported in the repo (can be disabled in fstab)
+        # TODO test dry-run mode
+        # TODO expose freeze in api ?
 
         current_app.logger.info("Asked to freeze '%s'" % path)
 

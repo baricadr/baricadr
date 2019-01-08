@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from subprocess import PIPE, Popen, call
@@ -79,6 +80,15 @@ class RcloneBackend(Backend):
         """
         Check if distant path is a single file or not
         """
+
+        remote_list = self.remote_list(repo, path)
+        return len(remote_list) == 1
+
+    # TODO expose remote_list in api ?
+    def remote_list(self, repo, path, full=False):
+        """
+        List content in a distant path
+        """
         obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = self.temp_rclone_config()
 
@@ -86,20 +96,31 @@ class RcloneBackend(Backend):
 
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
 
-        cmd = "rclone ls --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s' | wc -l" % (tempRcloneConfig.name, src, self.user, obscure_password)
+        cmd = "rclone lsjson -R --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, self.user, obscure_password)
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
-        remote_list = output.decode('ascii').strip('\n')
+        json_output = json.loads(output.decode('ascii'))
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
             raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password")
 
-        tempRcloneConfig.close()
+        current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
 
-        return remote_list == '1'
+        if full:
+            remote_list = json_output
+        else:
+            remote_list = []
+            for entry in json_output:
+                if not entry['IsDir']:
+                    remote_list.append(entry['Path'])
+            tempRcloneConfig.close()
+
+        current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
+
+        return remote_list
 
     def temp_rclone_config(self):
         tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
