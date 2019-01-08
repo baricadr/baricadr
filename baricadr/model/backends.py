@@ -1,7 +1,7 @@
 import json
 import os
 import tempfile
-from subprocess import PIPE, Popen, call
+from subprocess import PIPE, Popen
 
 from flask import current_app
 
@@ -72,7 +72,7 @@ class RcloneBackend(Backend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password")
+            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password (stderr: " + str(err) + ")")
 
         return obscure_password
 
@@ -110,7 +110,7 @@ class RcloneBackend(Backend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't run rclone lsjon")
+            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
 
         current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
 
@@ -168,10 +168,14 @@ class SftpBackend(RcloneBackend):
         # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
         cmd = "rclone %s --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
         current_app.logger.debug("Running command: %s" % cmd)
-        retcode = call(cmd, shell=True)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        retcode = p.returncode
+
         if retcode != 0:
-            raise RuntimeError("Child was terminated by signal %s: can't copy %s" % (retcode, path))
-            # ERROR_3: file or dir don't exist
+            current_app.logger.error(output)
+            current_app.logger.error(err)
+            raise RuntimeError("Child was terminated by signal %s: can't copy %s (stderr: " + str(err) + ")" % (retcode, path))
         tempRcloneConfig.close()
 
 
