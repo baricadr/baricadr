@@ -80,6 +80,28 @@ class TestBackends(BaricadrTestCase):
             assert os.path.exists(single_file)
             assert os.path.isfile(single_file)
 
+    def test_pull_sftp_single_invalid(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/non_existing_file.txt'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo/',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+            with pytest.raises(RuntimeError):
+                repo.pull(single_file)
+
+            assert not os.path.exists(single_file)
+
     def test_pull_sftp_repo(self, app):
 
         with tempfile.TemporaryDirectory() as local_path:
@@ -107,6 +129,29 @@ class TestBackends(BaricadrTestCase):
             # Spaces
             assert os.path.exists(single_file + '/subsubdir2/subsubsubdir/subsubsubdir2/a file')
             assert os.path.isfile(single_file + '/subsubdir2/subsubsubdir/subsubsubdir2/a file')
+
+    def test_pull_sftp_repo_invalid(self, app):
+
+        with tempfile.TemporaryDirectory() as local_path:
+            single_file = local_path + '/non_existing_subdir/'
+
+            conf = {
+                local_path: {
+                    'backend': 'sftp',
+                    'url': 'sftp:test-repo',
+                    'user': 'foo',
+                    'password': 'pass'
+                }
+            }
+
+            app.repos.read_conf_from_str(str(conf))
+
+            repo = app.repos.get_repo(single_file)
+
+            with pytest.raises(RuntimeError):
+                repo.pull(single_file)
+
+            assert not os.path.exists(single_file + '/subfile.txt')
 
     def test_pull_sftp_repo_no_slash(self, app):
 
