@@ -55,6 +55,7 @@ class Backend():
         raise NotImplementedError()
 
 
+# TODO check that we support symlinks now (https://github.com/ncw/rclone/issues/1152)
 class RcloneBackend(Backend):
     def __init__(self, conf):
         Backend.__init__(self, conf)

@@ -25,7 +25,7 @@ RUN apk add --no-cache \
 # Rclone install
 ENV PLATFORM_ARCH="amd64"
 ENV C_FORCE_ROOT='true'
-ARG RCLONE_VERSION="1.45"
+ARG RCLONE_VERSION="1.46"
 RUN  cd /tmp && \
     wget -q https://downloads.rclone.org/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-${PLATFORM_ARCH}.zip && \
     unzip /tmp/rclone-v${RCLONE_VERSION}-linux-${PLATFORM_ARCH}.zip && \
