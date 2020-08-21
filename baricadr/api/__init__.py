@@ -33,9 +33,6 @@ def pull_files():
         except EmailNotValidError as e:
             return jsonify({'error': str(e)}), 400
 
-    if 'path' not in request.json:
-        return jsonify({'error': 'Missing "path"'}), 400
-
     # Check if we're already pulling the file
     pulling_task_id = current_app.repos.is_already_pulling(asked_path)
     if pulling_task_id:
@@ -54,6 +51,19 @@ def pull_files():
         db.session.commit()
 
     return jsonify({'task': task_id})
+
+@api.route('/get_files', methods=['POST'])
+def get_files():
+    current_app.logger.debug("API call: Listing %s" % request.json)
+
+    if 'path' not in request.json:
+        return jsonify({'error': 'Missing "path"'}), 400
+
+    asked_path = os.path.abspath(request.json['path'])
+    repo = current_app.repos.get_repo(asked_path)
+    files = repo.remote_list(asked_path)
+
+    return jsonify(files)
 
 
 @api.route('/status/<task_id>', methods=['GET'])
