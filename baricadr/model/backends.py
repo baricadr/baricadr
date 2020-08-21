@@ -176,7 +176,7 @@ class SftpBackend(RcloneBackend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal %s: can't copy %s (stderr: " + str(err) + ")" % (retcode, path))
+            raise RuntimeError("Child was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
         tempRcloneConfig.close()
 
 
