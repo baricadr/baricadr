@@ -66,6 +66,8 @@ services:
 
     db:
         image: postgres:11-alpine
+        environment:
+          POSTGRES_PASSWORD: postgres
 
 volumes:
     # A volume shared between baricadr app and worker
