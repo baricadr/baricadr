@@ -56,12 +56,17 @@ def pull_files():
 def get_files():
     current_app.logger.debug("API call: Listing %s" % request.json)
 
-    if 'path' not in request.json:
+    if not request.json or 'path' not in request.json:
         return jsonify({'error': 'Missing "path"'}), 400
+
+    compare = False
+
+    if 'compare' in request.json and request.json['compare'].lower() == "true":
+        compare = True
 
     asked_path = os.path.abspath(request.json['path'])
     repo = current_app.repos.get_repo(asked_path)
-    files = repo.remote_list(asked_path)
+    files = repo.remote_list(asked_path, compare=compare)
 
     return jsonify(files)
 

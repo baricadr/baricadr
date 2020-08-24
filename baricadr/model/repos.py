@@ -1,6 +1,7 @@
 import datetime
 import fnmatch
 import os
+import tempfile
 
 from baricadr.db_models import PullTask
 
@@ -31,6 +32,9 @@ class Repo():
             if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
                 raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
 
+            if not self._has_atime():
+                raise ValueError("Malformed repository definition, freeze_age is set, but local_path does not support atime")
+
             self.freeze_age = conf['freeze_age']
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
@@ -49,7 +53,7 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, full=False):
+    def remote_list(self, path, full=False, compare=False):
         """
         List files from remote repository
 
@@ -60,7 +64,7 @@ class Repo():
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, full)
+        return self.backend.remote_list(self, path, full, compare)
 
     def freeze(self, path, force=False, dry_run=False):
         """
@@ -102,6 +106,16 @@ class Repo():
                 self._do_freeze(to_freeze)
 
         return freezables
+
+    # Might actually use this to run safety checks (can_write? others?)
+    def _has_atime(self):
+        test_file= tempfile.NamedTemporaryFile(dir=self.local_path)
+        starting_atime = os.stat(test_file.name).st_atime
+        test_file.read()
+        print(self.local_path)
+        print(starting_atime)
+        print(os.stat(test_file.name).st_atime)
+        return os.stat(test_file.name).st_atime > starting_atime
 
     def _get_freezable(self, path, remote_list, force=False):
         freezables = []
