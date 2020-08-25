@@ -2,6 +2,7 @@ import datetime
 import fnmatch
 import os
 import tempfile
+import time
 
 from baricadr.db_models import PullTask
 
@@ -18,12 +19,18 @@ class Repo():
             raise ValueError("Malformed repository definition, missing backend '%s'" % conf)
 
         self.local_path = local_path  # No trailing slash
+
+        perms = self._check_perms()
+        if not perms['writable']:
+            raise ValueError("Path '%s' is not writable" % local_path)
         self.exclude = None
         if 'exclude' in conf:
             self.exclude = conf['exclude']
         self.conf = conf
         self.freeze_age = 180
         if 'freeze_age' in conf:
+            if not perms['freezable']:
+                ValueError("Malformed repository definition for local path '%s', freeze_age is set, but local_path does not support atime" % local_path)
             try:
                 conf['freeze_age'] = int(conf['freeze_age'])
             except ValueError:
@@ -31,9 +38,6 @@ class Repo():
 
             if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
                 raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
-
-            if not self._has_atime():
-                raise ValueError("Malformed repository definition, freeze_age is set, but local_path does not support atime")
 
             self.freeze_age = conf['freeze_age']
 
@@ -108,14 +112,19 @@ class Repo():
         return freezables
 
     # Might actually use this to run safety checks (can_write? others?)
-    def _has_atime(self):
-        test_file= tempfile.NamedTemporaryFile(dir=self.local_path)
-        starting_atime = os.stat(test_file.name).st_atime
-        test_file.read()
-        print(self.local_path)
-        print(starting_atime)
-        print(os.stat(test_file.name).st_atime)
-        return os.stat(test_file.name).st_atime > starting_atime
+    def _check_perms(self):
+        perms = {"writable": True, "freezable": True}
+        try:
+            with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
+                starting_atime = os.stat(test_file.name).st_atime
+                # Need to wait a bit
+                time.sleep(0.1)
+                test_file.read()
+                if os.stat(test_file.name).st_atime == starting_atime:
+                    perms["freezable"]: False
+        except OSError:
+            perms["writable"]: False
+        return perms
 
     def _get_freezable(self, path, remote_list, force=False):
         freezables = []
