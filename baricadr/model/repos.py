@@ -57,7 +57,7 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, full=False, compare=False):
+    def remote_list(self, path, full=False, compare=False, max_depth=1):
         """
         List files from remote repository
 
@@ -68,7 +68,7 @@ class Repo():
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, full, compare)
+        return self.backend.remote_list(self, path, full, compare, max_depth)
 
     def freeze(self, path, force=False, dry_run=False):
         """

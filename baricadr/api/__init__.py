@@ -12,6 +12,11 @@ from flask import (Blueprint, current_app, jsonify, request)
 
 api = Blueprint('api', __name__, url_prefix='/')
 
+# Endpoint to check if API is running for CLI tests
+# Might return endpoints, version, anything
+@api.route('/', methods=['GET'])
+def home():
+    return jsonify({"msg":"Hello world"})
 
 @api.route('/pull', methods=['POST'])
 def pull_files():
@@ -61,12 +66,16 @@ def get_files():
 
     compare = False
 
-    if 'compare' in request.json and request.json['compare'].lower() == "true":
+    if 'compare' in request.json and str(request.json['compare']).lower() == "true":
         compare = True
+
+    max_depth = 1
+    if 'max_depth' in request.json:
+        max_depth = request.json['max_depth']
 
     asked_path = os.path.abspath(request.json['path'])
     repo = current_app.repos.get_repo(asked_path)
-    files = repo.remote_list(asked_path, compare=compare)
+    files = repo.remote_list(asked_path, compare=compare, max_depth=max_depth)
 
     return jsonify(files)
 

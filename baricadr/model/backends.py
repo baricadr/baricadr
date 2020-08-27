@@ -87,7 +87,7 @@ class RcloneBackend(Backend):
 
     # TODO expose remote_list in api ?
     # TODO we could use the --hash option of lsjson (may be slow, but may be useful)
-    def remote_list(self, repo, path, full=False, compare=False):
+    def remote_list(self, repo, path, full=False, compare=False, max_depth=1):
         """
         List content in a distant path
         """
@@ -98,7 +98,17 @@ class RcloneBackend(Backend):
 
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
 
-        cmd = "rclone lsjson -R --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s'" % (tempRcloneConfig.name, src, self.user, obscure_password)
+        max_depth_command = ""
+
+        try:
+            max_depth = int(max_depth)
+        except ValueError:
+            max_depth = 1
+        # If not 0 (0 is for listing all)
+        if max_depth:
+            max_depth_command = "--max-depth " + str(max_depth)
+
+        cmd = "rclone lsjson -R --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (tempRcloneConfig.name, src, self.user, obscure_password, max_depth_command)
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
@@ -124,21 +134,34 @@ class RcloneBackend(Backend):
                     remote_list.append(entry['Path'])
             tempRcloneConfig.close()
             if compare:
-                remote_list = self.compare_list(path, remote_list)
+                remote_list = self.compare_list(path, remote_list, max_depth)
 
         current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
 
         return remote_list
 
-    def compare_list(self, path, remote_list):
+    def compare_list(self, path, remote_list, max_depth):
         file_set = set()
         remote_list = set(remote_list)
-        for dir_, _, files in os.walk(path):
+        for dir_, _, files in self.restricted_walk(path, max_depth):
             for file_name in files:
                 rel_dir = os.path.relpath(dir_, path)
                 rel_file = os.path.join(rel_dir, file_name)
                 file_set.add(rel_file.lstrip("./"))
         return list(remote_list - file_set)
+
+    def restricted_walk(self, path, max_depth):
+        if max_depth == 0:
+            return os.walk(path)
+
+        dirs, nondirs = [], []
+        for entry in os.scandir(path):
+            (dirs if entry.is_dir() else nondirs).append(entry.path)
+        yield path, dirs, nondirs
+        if max_depth > 1:
+            for path in dirs:
+                for x in self.restricted_walk(path, max_depth-1):
+                    yield x
 
     def temp_rclone_config(self):
         tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
