@@ -96,7 +96,7 @@ class Repo():
 
         current_app.logger.info("Asked to freeze '%s'" % path)
 
-        remote_list = self.remote_list(path)
+        remote_list = self.remote_list(path, max_depth=0)
 
         freezables = self._get_freezable(path, remote_list, force)
 
