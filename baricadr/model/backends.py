@@ -158,7 +158,7 @@ class RcloneBackend(Backend):
         yield path, dirs, nondirs
         if not max_depth or max_depth > 1:
             for name in dirs:
-                for x in self.restricted_walk(os.path.join(path, name), 0 if not max_depth else max_depth-1):
+                for x in self.restricted_walk(os.path.join(path, name), 0 if not max_depth else max_depth - 1):
                     yield x
 
     def temp_rclone_config(self):

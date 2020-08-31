@@ -12,11 +12,13 @@ from flask import (Blueprint, current_app, jsonify, request)
 
 api = Blueprint('api', __name__, url_prefix='/')
 
+
 # Endpoint to check if API is running for CLI tests
 # Might return endpoints, version, anything
 @api.route('/', methods=['GET'])
 def home():
-    return jsonify({"msg":"Hello world"})
+    return jsonify({"msg": "Hello world"})
+
 
 @api.route('/pull', methods=['POST'])
 def pull_files():
@@ -56,6 +58,7 @@ def pull_files():
         db.session.commit()
 
     return jsonify({'task': task_id})
+
 
 @api.route('/get_files', methods=['POST'])
 def get_files():
