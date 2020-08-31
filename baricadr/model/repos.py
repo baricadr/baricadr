@@ -1,5 +1,6 @@
 import datetime
 import fnmatch
+import getpass
 import os
 import tempfile
 import time
@@ -21,6 +22,8 @@ class Repo():
         self.local_path = local_path  # No trailing slash
 
         perms = self._check_perms()
+        current_app.logger.info(perms)
+        #This breaks for some reason...
         if not perms['writable']:
             raise ValueError("Path '%s' is not writable" % local_path)
         self.exclude = None
@@ -113,15 +116,20 @@ class Repo():
 
     # Might actually use this to run safety checks (can_write? others?)
     def _check_perms(self):
-        perms = {"writable": True, "freezable": True}
+        # The forker thread is "nginx", not root, so it cannot write anyway.
+        if not getpass.getuser() == "root":
+            return {"writable": True, "freezable": True}
+
+        perms = {"writable": True, "freezable": False}
         try:
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
+                current_app.logger.info(test_file.name)
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
                 time.sleep(0.5)
                 test_file.read()
-                if os.stat(test_file.name).st_atime == starting_atime:
-                    perms["freezable"] = False
+                if not os.stat(test_file.name).st_atime == starting_atime:
+                    perms["freezable"] = True
         except OSError:
             perms["writable"] = False
         return perms

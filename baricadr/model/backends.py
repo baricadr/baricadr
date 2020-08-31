@@ -82,7 +82,7 @@ class RcloneBackend(Backend):
         Check if distant path is a single file or not
         """
 
-        remote_list = self.remote_list(repo, path)
+        remote_list = self.remote_list(repo, path, max_depth=0)
         return len(remote_list) == 1
 
     # TODO expose remote_list in api ?
@@ -99,6 +99,8 @@ class RcloneBackend(Backend):
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
 
         max_depth_command = ""
+        if full:
+            max_depth = 0
 
         try:
             max_depth = int(max_depth)
