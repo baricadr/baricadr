@@ -123,7 +123,7 @@ class Repo():
                 if os.stat(test_file.name).st_atime == starting_atime:
                     perms["freezable"] = False
         except OSError:
-            perms["writable"]: False
+            perms["writable"] = False
         return perms
 
     def _get_freezable(self, path, remote_list, force=False):
