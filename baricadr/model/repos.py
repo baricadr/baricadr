@@ -118,10 +118,10 @@ class Repo():
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
-                time.sleep(0.1)
+                time.sleep(0.5)
                 test_file.read()
                 if os.stat(test_file.name).st_atime == starting_atime:
-                    perms["freezable"]: False
+                    perms["freezable"] = False
         except OSError:
             perms["writable"]: False
         return perms
