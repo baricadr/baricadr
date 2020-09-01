@@ -23,7 +23,6 @@ class Repo():
 
         perms = self._check_perms()
         current_app.logger.info(perms)
-        #This breaks for some reason...
         if not perms['writable']:
             raise ValueError("Path '%s' is not writable" % local_path)
         self.exclude = None
