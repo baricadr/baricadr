@@ -136,15 +136,19 @@ class RcloneBackend(Backend):
                     remote_list.append(entry['Path'])
             tempRcloneConfig.close()
             if missing:
-                remote_list = self.missing_list(path, remote_list, max_depth)
+                remote_list = self.missing_list(path, remote_list, max_depth, repo)
 
         current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
 
         return remote_list
 
-    def missing_list(self, path, remote_list, max_depth):
-        file_set = set()
+    def missing_list(self, path, remote_list, max_depth, repo):
         remote_list = set(remote_list)
+        if os.path.isfile(path):
+            file_set = set([repo.relative_path(path)])
+            return list(remote_list - file_set)
+
+        file_set = set()
         for dir_, _, files in self.restricted_walk(path, max_depth):
             for file_name in files:
                 rel_dir = os.path.relpath(dir_, path)

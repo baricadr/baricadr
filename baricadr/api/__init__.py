@@ -12,6 +12,7 @@ from flask import (Blueprint, current_app, jsonify, request)
 
 api = Blueprint('api', __name__, url_prefix='/')
 
+
 # Endpoint to check if API is running for CLI tests
 @api.route('/version', methods=['GET'])
 def version():
