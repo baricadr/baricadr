@@ -87,7 +87,7 @@ class RcloneBackend(Backend):
 
     # TODO expose remote_list in api ?
     # TODO we could use the --hash option of lsjson (may be slow, but may be useful)
-    def remote_list(self, repo, path, full=False, compare=False, max_depth=1):
+    def remote_list(self, repo, path, full=False, missing=False, max_depth=1):
         """
         List content in a distant path
         """
@@ -135,14 +135,14 @@ class RcloneBackend(Backend):
                 if not entry['IsDir']:
                     remote_list.append(entry['Path'])
             tempRcloneConfig.close()
-            if compare:
-                remote_list = self.compare_list(path, remote_list, max_depth)
+            if missing:
+                remote_list = self.missing_list(path, remote_list, max_depth)
 
         current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
 
         return remote_list
 
-    def compare_list(self, path, remote_list, max_depth):
+    def missing_list(self, path, remote_list, max_depth):
         file_set = set()
         remote_list = set(remote_list)
         for dir_, _, files in self.restricted_walk(path, max_depth):

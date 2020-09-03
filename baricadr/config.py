@@ -2,6 +2,8 @@ class BaseConfig(object):
     DEBUG = False
     TESTING = False
 
+    BARICADR_VERSION = "1.0.0"
+
     # Celery
     BROKER_TRANSPORT = 'redis'
     CELERY_BROKER_URL = 'redis://redis:6379/0'

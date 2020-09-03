@@ -22,7 +22,6 @@ class Repo():
         self.local_path = local_path  # No trailing slash
 
         perms = self._check_perms()
-        current_app.logger.info(perms)
         if not perms['writable']:
             raise ValueError("Path '%s' is not writable" % local_path)
         self.exclude = None
@@ -59,7 +58,7 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, full=False, compare=False, max_depth=1):
+    def remote_list(self, path, full=False, missing=False, max_depth=1):
         """
         List files from remote repository
 
@@ -70,7 +69,7 @@ class Repo():
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, full, compare, max_depth)
+        return self.backend.remote_list(self, path, full, missing, max_depth)
 
     def freeze(self, path, force=False, dry_run=False):
         """
@@ -122,7 +121,6 @@ class Repo():
         perms = {"writable": True, "freezable": False}
         try:
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
-                current_app.logger.info(test_file.name)
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
                 time.sleep(0.5)
