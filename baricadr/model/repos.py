@@ -1,6 +1,9 @@
 import datetime
 import fnmatch
+import getpass
 import os
+import tempfile
+import time
 
 from baricadr.db_models import PullTask
 
@@ -17,12 +20,18 @@ class Repo():
             raise ValueError("Malformed repository definition, missing backend '%s'" % conf)
 
         self.local_path = local_path  # No trailing slash
+
+        perms = self._check_perms()
+        if not perms['writable']:
+            raise ValueError("Path '%s' is not writable" % local_path)
         self.exclude = None
         if 'exclude' in conf:
             self.exclude = conf['exclude']
         self.conf = conf
         self.freeze_age = 180
         if 'freeze_age' in conf:
+            if not perms['freezable']:
+                ValueError("Malformed repository definition for local path '%s', freeze_age is set, but local_path does not support atime" % local_path)
             try:
                 conf['freeze_age'] = int(conf['freeze_age'])
             except ValueError:
@@ -49,7 +58,7 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, full=False):
+    def remote_list(self, path, full=False, missing=False, max_depth=1):
         """
         List files from remote repository
 
@@ -60,7 +69,7 @@ class Repo():
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, full)
+        return self.backend.remote_list(self, path, full, missing, max_depth)
 
     def freeze(self, path, force=False, dry_run=False):
         """
@@ -88,7 +97,7 @@ class Repo():
 
         current_app.logger.info("Asked to freeze '%s'" % path)
 
-        remote_list = self.remote_list(path)
+        remote_list = self.remote_list(path, max_depth=0)
 
         freezables = self._get_freezable(path, remote_list, force)
 
@@ -102,6 +111,25 @@ class Repo():
                 self._do_freeze(to_freeze)
 
         return freezables
+
+    # Might actually use this to run safety checks (can_write? others?)
+    def _check_perms(self):
+        # The forker thread is "nginx", not root, so it cannot write anyway.
+        if not getpass.getuser() == "root":
+            return {"writable": True, "freezable": True}
+
+        perms = {"writable": True, "freezable": False}
+        try:
+            with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
+                starting_atime = os.stat(test_file.name).st_atime
+                # Need to wait a bit
+                time.sleep(0.5)
+                test_file.read()
+                if not os.stat(test_file.name).st_atime == starting_atime:
+                    perms["freezable"] = True
+        except OSError:
+            perms["writable"] = False
+        return perms
 
     def _get_freezable(self, path, remote_list, force=False):
         freezables = []

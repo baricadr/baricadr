@@ -13,6 +13,23 @@ from flask import (Blueprint, current_app, jsonify, request)
 api = Blueprint('api', __name__, url_prefix='/')
 
 
+# Endpoint to check if API is running for CLI tests
+@api.route('/version', methods=['GET'])
+def version():
+    return jsonify({"version": current_app.config.get("BARICADR_VERSION", "1.0.0")})
+
+
+# Might return arguments?
+@api.route('/endpoints', methods=['GET'])
+def endpoints():
+    endpoints = {}
+    for rule in current_app.url_map.iter_rules():
+        if rule.endpoint == "static":
+            continue
+        endpoints[rule.endpoint.split(".")[-1]] = rule.rule
+    return jsonify(endpoints)
+
+
 @api.route('/pull', methods=['POST'])
 def pull_files():
     current_app.logger.debug("API call: Pulling %s" % request.json)
@@ -33,9 +50,6 @@ def pull_files():
         except EmailNotValidError as e:
             return jsonify({'error': str(e)}), 400
 
-    if 'path' not in request.json:
-        return jsonify({'error': 'Missing "path"'}), 400
-
     # Check if we're already pulling the file
     pulling_task_id = current_app.repos.is_already_pulling(asked_path)
     if pulling_task_id:
@@ -54,6 +68,29 @@ def pull_files():
         db.session.commit()
 
     return jsonify({'task': task_id})
+
+
+@api.route('/list', methods=['POST'])
+def list():
+    current_app.logger.debug("API call: Listing %s" % request.json)
+
+    if not request.json or 'path' not in request.json:
+        return jsonify({'error': 'Missing "path"'}), 400
+
+    missing = False
+
+    if 'missing' in request.json and str(request.json['missing']).lower() == "true":
+        missing = True
+
+    max_depth = 1
+    if 'max_depth' in request.json:
+        max_depth = request.json['max_depth']
+
+    asked_path = os.path.abspath(request.json['path'])
+    repo = current_app.repos.get_repo(asked_path)
+    files = repo.remote_list(asked_path, missing=missing, max_depth=max_depth)
+
+    return jsonify(files)
 
 
 @api.route('/status/<task_id>', methods=['GET'])

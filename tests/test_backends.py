@@ -270,7 +270,7 @@ class TestBackends(BaricadrTestCase):
             app.repos.read_conf_from_str(str(conf))
 
             repo = app.repos.get_repo(target)
-            assert repo.remote_list(target) == [
+            assert repo.remote_list(target, max_depth=0) == [
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
