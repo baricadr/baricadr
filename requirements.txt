@@ -11,7 +11,7 @@ email_validator
 
 # Celery
 redis
-celery
+celery<5
 
 # SQLAlchemy
 Flask-SQLAlchemy
