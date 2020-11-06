@@ -5,7 +5,7 @@ import os
 import tempfile
 import time
 
-from baricadr.db_models import PullTask
+from baricadr.db_models import BaricadrTask
 
 from flask import current_app
 
@@ -30,8 +30,6 @@ class Repo():
         self.conf = conf
         self.freeze_age = 180
         if 'freeze_age' in conf:
-            if not perms['freezable']:
-                ValueError("Malformed repository definition for local path '%s', freeze_age is set, but local_path does not support atime" % local_path)
             try:
                 conf['freeze_age'] = int(conf['freeze_age'])
             except ValueError:
@@ -41,6 +39,10 @@ class Repo():
                 raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
 
             self.freeze_age = conf['freeze_age']
+
+        # TODO [HI] allow using non-freezable repos = only allow pulls
+        if not perms['freezable']:
+            ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
@@ -58,18 +60,27 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, full=False, missing=False, max_depth=1):
+    def remote_list(self, path, missing=False, max_depth=1, from_root=False):
         """
         List files from remote repository
 
         :type path: str
         :param path: Path where baricadr should list files
 
+        :type missing: bool
+        :param missing: Only list files missing from the local path
+
+        :type from_root: bool
+        :param from_root: Return full paths from root of the repo (instead of relative to given path)
+
+        :type max_depth: int
+        :param max_depth: Restrict to a max depth. Set to 0 for all files.
+
         :rtype: list
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, full, missing, max_depth)
+        return self.backend.remote_list(self, path, missing, max_depth, from_root)
 
     def freeze(self, path, force=False, dry_run=False):
         """
@@ -88,16 +99,13 @@ class Repo():
         :return: list of freezed files
         """
 
-        # TODO keep track of md5 if needed for checking
-        # TODO check rclone check -> does it work without hash support with sftp in rclone?
-        # TODO should we allow to force freeze?
-        # TODO test force mode
-        # TODO test at startup that atime is supported in the repo (can be disabled in fstab)
-        # TODO expose freeze in api ?
+        # TODO [LOW] keep track of md5 if needed for checking
+        # TODO [LOW] check rclone check -> does it work without hash support with sftp in rclone?
+        # TODO [HI] test force mode in freeze
 
         current_app.logger.info("Asked to freeze '%s'" % path)
 
-        remote_list = self.remote_list(path, max_depth=0)
+        remote_list = self.remote_list(path, max_depth=0, from_root=True)
 
         freezables = self._get_freezable(path, remote_list, force)
 
@@ -141,6 +149,7 @@ class Repo():
         if os.path.exists(path) and os.path.isfile(path):
             for ex in excludes:
                 if fnmatch.fnmatch(path, ex.strip()):
+                    current_app.logger.info("Found excluded path: %s with expression %s" % (path, ex.strip()))
                     return
             if (force or self._can_freeze(path)) and (self.relative_path(path) in remote_list):
                 freezables.append(path)
@@ -148,9 +157,11 @@ class Repo():
             for root, subdirs, files in os.walk(path):
                 for name in files:
                     candidate = os.path.join(root, name)
+                    current_app.logger.info("Evaluating freezable for path: %s -> force %s can_freeze %s in remote_list %s" % (candidate, force, self._can_freeze(path), (self.relative_path(path) in remote_list)))
                     excluded = False
                     for ex in excludes:
                         if fnmatch.fnmatch(candidate, ex.strip()):
+                            current_app.logger.info("Found excluded path: %s with expression %s" % (candidate, ex.strip()))
                             excluded = True
                             break
                     if not excluded and (force or self._can_freeze(candidate)) and (self.relative_path(candidate) in remote_list):
@@ -173,7 +184,7 @@ class Repo():
         now = datetime.date.today()
         delta = now - last_access
         delta = delta.days
-        current_app.logger.info("Checking if we should freeze '%s': last accessed on %s (%s days ago)" % (file_to_check, last_access, delta))
+        current_app.logger.info("Checking if we should freeze '%s' (freeze_age=%s): last accessed on %s (%s days ago) =>  %s" % (file_to_check, self.freeze_age, last_access, delta, delta > self.freeze_age))
 
         return delta > self.freeze_age
 
@@ -257,29 +268,29 @@ class Repos():
 
         raise RuntimeError('Could not find baricadr repository for path "%s"' % path)
 
-    def is_already_pulling(self, path):
+    def is_already_touching(self, path):
         """
-        If a task is already pulling path or an upper directory, returns the task id.
+        If a task is already pulling/freezing path or an upper directory, returns the task id.
         Return False otherwise.
         """
 
-        running_tasks = PullTask.query.all()
+        running_tasks = BaricadrTask.query.all()
         for rt in running_tasks:
-            if path.startswith(rt.path):
+            if rt.finished is None and path.startswith(rt.path):
                 return rt.task_id
 
         return False
 
     def is_locked_by_subdir(self, path):
         """
-        If some tasks are already pulling a subdirectory of path, returns the list of task ids.
+        If some tasks are already pulling/freezing a subdirectory of path, returns the list of task ids.
         Return an empty list otherwise.
         """
 
-        running_tasks = PullTask.query.all()
+        running_tasks = BaricadrTask.query.all()
         locking = []
         for rt in running_tasks:
-            if rt.path.startswith(path) and path != rt.path:
+            if rt.finished is None and rt.path.startswith(path) and path != rt.path:
                 locking.append(rt.task_id)
 
         return locking

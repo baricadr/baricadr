@@ -48,6 +48,10 @@ docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends
 
 # Using it
 
+The best way to use Baricadr is to use the corresponding [python module](https://github.com/baricadr/baricadr_cli) which provides a simple CLI and a python interface.
+
+If you prefer to use it using curl, you can do the following:
+
 ## Triggering a "pull"
 
 `curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/some/local/path/test.gz"}'`

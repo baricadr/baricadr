@@ -55,7 +55,7 @@ class Backend():
         raise NotImplementedError()
 
 
-# TODO check that we support symlinks now (https://github.com/ncw/rclone/issues/1152)
+# TODO [HI] check that we support symlinks now (https://github.com/ncw/rclone/issues/1152)
 class RcloneBackend(Backend):
     def __init__(self, conf):
         Backend.__init__(self, conf)
@@ -85,9 +85,8 @@ class RcloneBackend(Backend):
         remote_list = self.remote_list(repo, path, max_depth=0)
         return len(remote_list) == 1
 
-    # TODO expose remote_list in api ?
-    # TODO we could use the --hash option of lsjson (may be slow, but may be useful)
-    def remote_list(self, repo, path, full=False, missing=False, max_depth=1):
+    # TODO [LOW] we could use the --hash option of lsjson (may be slow, but may be useful)
+    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False):
         """
         List content in a distant path
         """
@@ -99,8 +98,6 @@ class RcloneBackend(Backend):
         src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
 
         max_depth_command = ""
-        if full:
-            max_depth = 0
 
         try:
             max_depth = int(max_depth)
@@ -127,16 +124,20 @@ class RcloneBackend(Backend):
 
         current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
 
-        if full:
-            remote_list = json_output
-        else:
-            remote_list = []
-            for entry in json_output:
-                if not entry['IsDir']:
+        path_rel_prefix = rel_path
+        if len(json_output) == 1 and not json_output[0]['IsDir']:
+            path_rel_prefix = os.path.dirname(rel_path)
+
+        remote_list = []
+        for entry in json_output:
+            if not entry['IsDir']:
+                if from_root:
+                    remote_list.append(os.path.join(path_rel_prefix, entry['Path']))
+                else:
                     remote_list.append(entry['Path'])
-            tempRcloneConfig.close()
-            if missing:
-                remote_list = self.missing_list(path, remote_list, max_depth, repo)
+        tempRcloneConfig.close()
+        if missing:
+            remote_list = self.missing_list(path, remote_list, max_depth, repo)
 
         current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
 
@@ -155,7 +156,7 @@ class RcloneBackend(Backend):
                 rel_file = os.path.join(rel_dir, file_name)
                 file_set.add(rel_file.lstrip("./"))
 
-        return list(remote_list - file_set)
+        return sorted(list(remote_list - file_set))
 
     def restricted_walk(self, path, max_depth):
         dirs, nondirs = [], []

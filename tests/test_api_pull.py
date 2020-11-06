@@ -1,59 +1,11 @@
 import os
 import shutil
-from pathlib import Path
 from time import sleep
 
 from . import BaricadrTestCase
 
 
-class TestApi(BaricadrTestCase):
-
-    def test_list_fill_depth_1(self, client):
-        """
-            Get files at depth 1
-        """
-        body = {"path": "/repos/test_repo/", "max_depth": 1}
-        file_list = ["file.txt", "file2.txt"]
-        response = client.post("/list", json=body)
-
-        assert response.status_code == 200
-        assert response.json == file_list
-
-    def test_list_fill_depth_2(self, client):
-        """
-            Get files at depth 1
-        """
-        body = {"path": "/repos/test_repo/", "max_depth": 2}
-        file_list = ["file.txt", "file2.txt", "subdir/subfile.txt"]
-        response = client.post("/list", json=body)
-
-        assert response.status_code == 200
-        assert response.json == file_list
-
-    def test_list_fill_max_depth(self, client):
-        """
-            Get files at depth 1
-        """
-        body = {"path": "/repos/test_repo/", "max_depth": 0}
-        response = client.post("/list", json=body)
-
-        assert response.status_code == 200
-        assert len(response.json) == 9
-
-    def test_list_fill_missing(self, client):
-        """
-            Get files at depth 1 and check missing
-        """
-        if not os.path.isfile("/repos/test_repo/file.txt"):
-            Path("/repos/test_repo/file.txt").touch()
-        if os.path.isfile("/repos/test_repo/file2.txt"):
-            os.unlink("/repos/test_repo/file2.txt")
-
-        body = {"path": "/repos/test_repo/", "missing": "True"}
-        response = client.post("/list", json=body)
-
-        assert response.status_code == 200
-        assert response.json == ["file2.txt"]
+class TestApiPull(BaricadrTestCase):
 
     def test_pull_missing_path(self, client):
         """
@@ -79,16 +31,6 @@ class TestApi(BaricadrTestCase):
 
         assert response.status_code == 400
         assert response.json == {"error": "The email address is not valid. It must have exactly one @-sign."}
-
-    def test_get_status_unknown(self, client):
-        """
-        Get status from a non-existing task
-        """
-        response = client.get('/status/foobar')
-
-        # TODO maybe we should send a 404 error, but celery can't say if the task is finished or doesn't exist
-        assert response.json == {'finished': 'false', 'error': 'false', 'info': None}
-        assert response.status_code == 200
 
     def test_pull_success(self, app, client):
         """
@@ -132,13 +74,13 @@ class TestApi(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['finished'] == "true":
+            if response.json['task']['finished'] == "true":
                 break
             else:
-                assert response.json['error'] == 'false'
+                assert response.json['task']['error'] == 'false'
             wait += 1
 
-        assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -171,13 +113,13 @@ class TestApi(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['finished'] == "true":
+            if response.json['task']['finished'] == "true":
                 break
             else:
-                assert response.json['error'] == 'false'
+                assert response.json['task']['error'] == 'false'
             wait += 1
 
-        assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -432,20 +374,17 @@ class TestApi(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['finished'] == "true":
+            if response.json['task']['finished'] == "true":
                 break
             else:
-                assert response.json['error'] == 'false'
+                assert response.json['task']['error'] == 'false'
             wait += 1
 
-        assert response.json == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
 
     def pull_and_wait(self, client, path):
 
         pull_id = self.pull_quick(client, path)
         self.wait_for_pull(client, pull_id)
 
-# TODO better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
-# TODO test checksum
-# TODO store in db the freezed file => consult it with baricadr ls
-# TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
+# TODO [HI] better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting

@@ -23,11 +23,14 @@ if ! [[ $DB_CONNECTABLE -eq 0 ]]; then
     exit "${DB_CONNECTABLE}"
 fi
 
-# Mae sure the db schema is up-to-date
+# Make sure the db schema is up-to-date
 flask db upgrade
 
 # Schedule a zombie killer in a few seconds
 atd
 echo "sleep 10; curl http://localhost/zombie" | at now
+
+# TODO [HI] schedule regular zombie killing
+# TODO [HI] schedule regular autofreezing
 
 /usr/bin/supervisord

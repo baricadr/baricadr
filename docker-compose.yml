@@ -13,7 +13,7 @@ services:
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
         volumes:
             - repos:/repos/
-            - ./:/baricadr/:ro
+            - ./:/baricadr/
             - ./docker/uwsgi_dev.ini:/etc/uwsgi/uwsgi.ini:ro
 
     worker:

@@ -1,10 +1,18 @@
+from datetime import datetime
 from .extensions import db
 
 
-class PullTask(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    path = db.Column(db.Text(), index=True, unique=True)
-    task_id = db.Column(db.String(255), index=True, unique=True)
+# Storing information in an sql db as getting it from finished celery tasks is not possible/reliable
+
+class BaricadrTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    path = db.Column(db.Text(), index=True, nullable=False)
+    type = db.Column(db.String(255), index=True, nullable=False)
+    task_id = db.Column(db.String(255), index=True, unique=True, nullable=False)
+    status = db.Column(db.String(255), nullable=False, default='new')
+    created = db.Column(db.DateTime(), nullable=False, default=datetime.utcnow)
+    started = db.Column(db.DateTime())
+    finished = db.Column(db.DateTime())
 
     def __repr__(self):
-        return '<PullTask {} {}>'.format(self.path, self.task_id)
+        return '<BaricadrTask {} {} {} {}>'.format(self.type, self.path, self.task_id, self.status)

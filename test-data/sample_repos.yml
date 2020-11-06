@@ -16,6 +16,26 @@
     user: foo
     password: pass
 
+/repos/test_repo_freeze/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+
+/repos/test_repo_freeze_exclude/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    exclude: "*xml"
+
+/repos/test_repo_freeze_exclude_multiple/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    exclude: "*xml , *tsv"
+
 /repos/test_repo_exclude/:
     backend: sftp
     url: sftp:test-repo

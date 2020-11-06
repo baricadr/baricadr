@@ -6,7 +6,7 @@ from flask import Flask, g, render_template
 
 from .api import api
 # Import model classes for flaks migrate
-from .db_models import PullTask  # noqa: F401
+from .db_models import BaricadrTask  # noqa: F401
 from .extensions import (celery, db, mail, migrate)
 from .model import backends
 from .model.repos import Repos
