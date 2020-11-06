@@ -1,6 +1,5 @@
 import datetime
 import fnmatch
-import getpass
 import os
 import tempfile
 import time
@@ -24,6 +23,7 @@ class Repo():
         perms = self._check_perms()
         if not perms['writable']:
             raise ValueError("Path '%s' is not writable" % local_path)
+
         self.exclude = None
         if 'exclude' in conf:
             self.exclude = conf['exclude']
@@ -42,8 +42,7 @@ class Repo():
 
         # TODO [HI] allow using non-freezable repos = only allow pulls
         if not perms['freezable']:
-            # TODO [HI] seems to be broken
-            ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
+            raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
