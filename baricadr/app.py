@@ -19,13 +19,17 @@ BLUEPRINTS = (
 )
 
 
-def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None):
+def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None, is_worker=False):
     app = Flask(app_name,
                 static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'),
                 template_folder="templates"
                 )
 
     with app.app_context():
+
+        # Can be used to check if some code is executed in a Celery worker, or in the web app
+        app.is_worker = is_worker
+
         configs = {
             "dev": "baricadr.config.DevelopmentConfig",
             "test": "baricadr.config.TestingConfig",

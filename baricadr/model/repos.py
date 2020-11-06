@@ -42,6 +42,7 @@ class Repo():
 
         # TODO [HI] allow using non-freezable repos = only allow pulls
         if not perms['freezable']:
+            # TODO [HI] seems to be broken
             ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
@@ -122,8 +123,10 @@ class Repo():
 
     # Might actually use this to run safety checks (can_write? others?)
     def _check_perms(self):
-        # The forker thread is "nginx", not root, so it cannot write anyway.
-        if not getpass.getuser() == "root":
+        if not current_app.is_worker:
+            # The web app doesn't need to have write access, nor to check if the repo is freezable
+            # The web forker thread is "nginx", not root, so it cannot write anyway.
+            current_app.logger.info("Web process, skipping perms checks for repo %s" % (self.local_path))
             return {"writable": True, "freezable": True}
 
         perms = {"writable": True, "freezable": False}
@@ -137,6 +140,9 @@ class Repo():
                     perms["freezable"] = True
         except OSError:
             perms["writable"] = False
+
+        current_app.logger.info("Worker process, perms detected for repo %s: %s" % (self.local_path, perms))
+
         return perms
 
     def _get_freezable(self, path, remote_list, force=False):

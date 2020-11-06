@@ -14,7 +14,7 @@ from flask_mail import Message
 from .extensions import db, mail
 
 
-app = create_app(config='../local.cfg')
+app = create_app(config='../local.cfg', is_worker=True)
 celery = create_celery(app)
 
 
