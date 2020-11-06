@@ -370,23 +370,16 @@ class TestApiFreeze(BaricadrTestCase):
 
         repo_dir = os.path.join(self.testing_repo, 'subdir')
 
-        print("Atime before set atime: %s" % os.stat(repo_dir + '/subfile.txt').st_atime)
         self.set_old_atime(repo_dir, age=3600 * 5000)
 
-        print("Atime before open r: %s" % os.stat(repo_dir + '/subfile.txt').st_atime)
         with open(repo_dir + '/subfile.txt', 'r') as local_file:
             assert local_file.readline() == 'subfile content\n'
 
-        print("Atime after open r: %s" % os.stat(repo_dir + '/subfile.txt').st_atime)
         # Modify in local repo
         with open(repo_dir + '/subfile.txt', 'w') as local_file:
             local_file.write('This was touched locally\n')
 
-        print("Atime after open w: %s" % os.stat(repo_dir + '/subfile.txt').st_atime)
-
         self.freeze_and_wait(client, repo_dir)
-
-        print("Atime after freeze: %s" % os.stat(repo_dir + '/subfile.txt').st_atime)
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
