@@ -270,16 +270,14 @@ class TestBackends(BaricadrTestCase):
             app.repos.read_conf_from_str(str(conf))
 
             repo = app.repos.get_repo(target)
-            assert repo.remote_list(target, max_depth=0) == [
+            assert repo.remote_list(target, max_depth=2) == [
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
-                'subsubdir2/subsubsubdir/subsubsubdir2/a file',
                 'subsubdir/poutrelle.tsv',
                 'subsubdir/poutrelle.xml',
                 'subsubdir/subsubfile.txt',
             ]
-
     def test_remote_list_sftp_full(self, app):
 
         with tempfile.TemporaryDirectory() as local_path:
@@ -298,7 +296,13 @@ class TestBackends(BaricadrTestCase):
 
             repo = app.repos.get_repo(target)
             remote_list = []
-            for rli in repo.remote_list(target, True):
-                del rli['ModTime']  # ModTime is too hard to test properly
-                remote_list.append(rli)
-            assert remote_list == [{'Path': 'subfile.txt', 'Name': 'subfile.txt', 'Size': 16, 'MimeType': 'text/plain; charset=utf-8', 'IsDir': False}, {'Path': 'subsubdir', 'Name': 'subsubdir', 'Size': -1, 'MimeType': 'inode/directory', 'IsDir': True}, {'Path': 'subsubdir2', 'Name': 'subsubdir2', 'Size': -1, 'MimeType': 'inode/directory', 'IsDir': True}, {'Path': 'subsubdir2/poutrelle.xml', 'Name': 'poutrelle.xml', 'Size': 13, 'MimeType': 'text/xml; charset=utf-8', 'IsDir': False}, {'Path': 'subsubdir2/subsubfile.txt', 'Name': 'subsubfile.txt', 'Size': 19, 'MimeType': 'text/plain; charset=utf-8', 'IsDir': False}, {'Path': 'subsubdir2/subsubsubdir', 'Name': 'subsubsubdir', 'Size': -1, 'MimeType': 'inode/directory', 'IsDir': True}, {'Path': 'subsubdir2/subsubsubdir/subsubsubdir2', 'Name': 'subsubsubdir2', 'Size': -1, 'MimeType': 'inode/directory', 'IsDir': True}, {'Path': 'subsubdir2/subsubsubdir/subsubsubdir2/a file', 'Name': 'a file', 'Size': 0, 'MimeType': 'application/octet-stream', 'IsDir': False}, {'Path': 'subsubdir/poutrelle.tsv', 'Name': 'poutrelle.tsv', 'Size': 25, 'MimeType': 'text/tab-separated-values; charset=utf-8', 'IsDir': False}, {'Path': 'subsubdir/poutrelle.xml', 'Name': 'poutrelle.xml', 'Size': 13, 'MimeType': 'text/xml; charset=utf-8', 'IsDir': False}, {'Path': 'subsubdir/subsubfile.txt', 'Name': 'subsubfile.txt', 'Size': 19, 'MimeType': 'text/plain; charset=utf-8', 'IsDir': False}]
+
+            assert repo.remote_list(target, max_depth=0) == [
+                'subfile.txt',
+                'subsubdir2/poutrelle.xml',
+                'subsubdir2/subsubfile.txt',
+                'subsubdir2/subsubsubdir/subsubsubdir2/a file',
+                'subsubdir/poutrelle.tsv',
+                'subsubdir/poutrelle.xml',
+                'subsubdir/subsubfile.txt',
+            ]
