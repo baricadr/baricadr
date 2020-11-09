@@ -278,6 +278,7 @@ class TestBackends(BaricadrTestCase):
                 'subsubdir/poutrelle.xml',
                 'subsubdir/subsubfile.txt',
             ]
+
     def test_remote_list_sftp_full(self, app):
 
         with tempfile.TemporaryDirectory() as local_path:
@@ -295,7 +296,6 @@ class TestBackends(BaricadrTestCase):
             app.repos.read_conf_from_str(str(conf))
 
             repo = app.repos.get_repo(target)
-            remote_list = []
 
             assert repo.remote_list(target, max_depth=0) == [
                 'subfile.txt',
