@@ -1,17 +1,16 @@
-from datetime import datetime
 import os
 import time
+from datetime import datetime
 
 import baricadr.api
 from baricadr.app import create_app, create_celery
 from baricadr.db_models import BaricadrTask
+from baricadr.extensions import db, mail
 
 from celery.result import AsyncResult
 from celery.signals import task_postrun
 
 from flask_mail import Message
-
-from .extensions import db, mail
 
 
 app = create_app(config='../local.cfg', is_worker=True)
