@@ -40,7 +40,7 @@ class Repo():
 
             self.freeze_age = conf['freeze_age']
 
-        # TODO [HI] allow using non-freezable repos = only allow pulls
+        # TODO [HI] allow using non-freezable repos = only allow pulls -> must be specified in conf?
         if not perms['freezable']:
             raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
@@ -130,6 +130,7 @@ class Repo():
 
         perms = {"writable": True, "freezable": False}
         try:
+            # TODO [HIHI] this fails in docker tests
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
