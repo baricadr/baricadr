@@ -334,17 +334,17 @@ class TestApiFreeze(BaricadrTestCase):
 
         repo_dir = os.path.join(self.testing_repo, 'subdir')
 
-        self.set_old_atime(repo_dir, age=3600 * 5000)
-
         # Copy a local-only file in local repo
         shutil.copyfile(os.path.join(self.testing_repo, 'subdir', 'subfile.txt'), os.path.join(self.testing_repo, 'subdir', 'local_new_file.txt'))
+        # Set atime AFTER copy, else it will be reset
+        self.set_old_atime(repo_dir, age=3600 * 5000)
 
         self.freeze_and_wait(client, repo_dir)
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
             os.path.join(self.testing_repo, 'file2.txt'),
-            os.path.join(self.testing_repo, 'subdir', 'local_new_file.txt'),
+            os.path.join(self.testing_repo, 'subdir', 'local_new_file.txt')
         ]
 
         expected_freezed = [
