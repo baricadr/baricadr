@@ -268,16 +268,17 @@ class TestBackends(BaricadrTestCase):
             }
 
             app.repos.read_conf_from_str(str(conf))
-
             repo = app.repos.get_repo(target)
-            assert repo.remote_list(target, max_depth=2) == [
+
+            # Order is unreliable, compare sets
+            assert set(repo.remote_list(target, max_depth=2)) == set([
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
                 'subsubdir/poutrelle.tsv',
                 'subsubdir/poutrelle.xml',
                 'subsubdir/subsubfile.txt',
-            ]
+            ])
 
     def test_remote_list_sftp_full(self, app):
 
@@ -294,10 +295,10 @@ class TestBackends(BaricadrTestCase):
             }
 
             app.repos.read_conf_from_str(str(conf))
-
             repo = app.repos.get_repo(target)
 
-            assert repo.remote_list(target, max_depth=0) == [
+            # Order is unreliable, compare sets
+            assert set(repo.remote_list(target, max_depth=0)) == set([
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
@@ -305,4 +306,4 @@ class TestBackends(BaricadrTestCase):
                 'subsubdir/poutrelle.tsv',
                 'subsubdir/poutrelle.xml',
                 'subsubdir/subsubfile.txt',
-            ]
+            ])
