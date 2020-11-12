@@ -49,6 +49,13 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         if config:
             app.config.from_pyfile(config)
 
+        max_delay = app.config.get('MAX_TASK_DELAY', '21600')
+        try:
+            max_delay = int(max_delay)
+        except ValueError:
+            max_delay = 21600
+        app.config['MAX_TASK_DELAY'] = max_delay
+
         # Load the list of baricadr repositories
         app.backends = backends.Backends()
         if 'BARICADR_REPOS_CONF' in app.config:
