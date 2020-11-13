@@ -7,7 +7,6 @@ from baricadr.app import create_app, create_celery
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db, mail
 
-from celery import Task
 from celery.result import AsyncResult
 from celery.signals import task_postrun
 
@@ -26,19 +25,21 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
     dbtask.finished = datetime.utcnow()
     db.session.commit()
 
-@celery.task(bind=True, name="pull", on_failure=on_failure)
-def pull(self, path, email=None, wait_for=[]):
+
+def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
 
     # Wait a bit in case the tasks begin just before it is recorded in the db
     time.sleep(2)
-    dbtask = BaricadrTask.query.filter_by(task_id=pull.request.id).one()
+    dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
     dbtask.status = 'started' if wait_for else 'waiting'
     dbtask.started = datetime.utcnow()
     db.session.commit()
 
+    vocab = {'pull': 'pulling', 'freeze': 'freezing'}
+
     wait_for_failed = False
     if wait_for:
-        app.logger.debug("Waiting for tasks %s before pulling '%s'" % (wait_for, path))
+        app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
             tries = 0
             while tries < app.config['MAX_TASK_DELAY']:  # Wait at most 6h
@@ -53,7 +54,7 @@ def pull(self, path, email=None, wait_for=[]):
                 break
 
     if not wait_for_failed:
-        app.logger.debug("Pulling path '%s'" % (path))
+        app.logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
 
         self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
@@ -61,15 +62,19 @@ def pull(self, path, email=None, wait_for=[]):
         asked_path = os.path.abspath(path)
 
         repo = app.repos.get_repo(asked_path)
-        self.update_state(state='PROGRESS', meta={'status': 'pulling'})
+        self.update_state(state='PROGRESS', meta={'status': vocab[type]})
 
-        dbtask.status = 'pulling'
+        dbtask.status = vocab[type]
         db.session.commit()
 
-        repo.pull(asked_path)
+        if type == "pull":
+            repo.pull(asked_path)
+        else:
+            repo.freeze(asked_path)
 
         self.update_state(state='PROGRESS', meta={'status': 'success'})
         dbtask.status = 'finished'
+
     else:
         self.update_state(state='PROGRESS', meta={'status': 'failed'})
         dbtask.status = 'failed'
@@ -79,82 +84,27 @@ def pull(self, path, email=None, wait_for=[]):
 
     if email:
         if wait_for_failed:
-            msg = Message(subject="Failed to pull",
-                          body="Failed to pull %s" % path,  # TODO [LOW] better text
+            msg = Message(subject="Failed to %s" % (type),
+                          body="Failed to %s %s" % (type, path),  # TODO [LOW] better text
                           sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
                           recipients=[email])
         else:
-            msg = Message(subject="Finished to pull",
-                          body="Finished to pull %s" % path,  # TODO [LOW] better text
+            msg = Message(subject="Finished %s" % (vocab[type]),
+                          body="Finished %s %s" % (type, path),  # TODO [LOW] better text
                           sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
                           recipients=[email])
         mail.send(msg)
+
+
+# Maybe fuse the tasks also?
+@celery.task(bind=True, name="pull", on_failure=on_failure)
+def pull(self, path, email=None, wait_for=[]):
+    manage_repo(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for)
 
 
 @celery.task(bind=True, name="freeze", on_failure=on_failure)
 def freeze(self, path, email=None, wait_for=[]):
-
-    # Wait a bit in case the tasks begin just before it is recorded in the db
-    time.sleep(2)
-    dbtask = BaricadrTask.query.filter_by(task_id=freeze.request.id).one()
-    dbtask.status = 'started' if wait_for else 'waiting'
-    dbtask.started = datetime.utcnow()
-    db.session.commit()
-    # TODO [HI] update this code to sync with pull above (+refactor?)
-
-    wait_for_failed = False
-    if wait_for:
-        app.logger.debug("Waiting for tasks %s before freezing '%s'" % (wait_for, path))
-        for wait_id in wait_for:
-            tries = 0
-            while tries < app.config['MAX_TASK_DELAY']:  # Wait at most 6h
-                res = AsyncResult(wait_id)
-                if str(res.ready()).lower() == "true":
-                    break
-                time.sleep(2)
-                tries += 1
-            if tries == app.config['MAX_TASK_DELAY']:
-                wait_for_failed = True
-                app.logger.warning("Waited too long for task '%s', giving up" % (wait_id))
-                break
-
-    if not wait_for_failed:
-        app.logger.debug("Freezing path '%s'" % (path))
-
-        self.update_state(state='PROGRESS', meta={'status': 'starting task'})
-
-        # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
-        asked_path = os.path.abspath(path)
-
-        repo = app.repos.get_repo(asked_path)
-        self.update_state(state='PROGRESS', meta={'status': 'freezing'})
-
-        dbtask.status = 'freezing'
-        db.session.commit()
-
-        repo.freeze(asked_path)
-
-        self.update_state(state='PROGRESS', meta={'status': 'success'})
-        dbtask.status = 'finished'
-    else:
-        self.update_state(state='PROGRESS', meta={'status': 'failed'})
-        dbtask.status = 'failed'
-
-    dbtask.finished = datetime.utcnow()
-    db.session.commit()
-
-    if email:
-        if wait_for_failed:
-            msg = Message(subject="Failed to freeze",
-                          body="Failed to freeze %s" % path,  # TODO [LOW] better text
-                          sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                          recipients=[email])
-        else:
-            msg = Message(subject="Finished to freeze",
-                          body="Finished to freeze %s" % path,  # TODO [LOW] better text
-                          sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                          recipients=[email])
-        mail.send(msg)
+    manage_repo(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for)
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
