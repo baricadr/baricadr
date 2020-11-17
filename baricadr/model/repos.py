@@ -139,6 +139,7 @@ class Repo():
 
         perms = {"writable": True, "freezable": False}
         try:
+            # TODO [HIHI] this fails in docker tests
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
