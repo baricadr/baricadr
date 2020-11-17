@@ -6,6 +6,8 @@ import time
 
 from baricadr.db_models import BaricadrTask
 
+import dateutil.parser
+
 from flask import current_app
 
 import yaml
@@ -28,8 +30,17 @@ class Repo():
         if 'exclude' in conf:
             self.exclude = conf['exclude']
         self.conf = conf
+
+        # Default behaviour should be non-freeze
+        self.can_freeze = False
+        if 'freezable' in conf and conf['freezable'] is True:
+            self.can_freeze = True
+
         self.freeze_age = 180
         if 'freeze_age' in conf:
+            if not perms['freezable']:
+                raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
+
             try:
                 conf['freeze_age'] = int(conf['freeze_age'])
             except ValueError:
@@ -39,10 +50,6 @@ class Repo():
                 raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
 
             self.freeze_age = conf['freeze_age']
-
-        # TODO [HI] allow using non-freezable repos = only allow pulls
-        if not perms['freezable']:
-            raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
@@ -60,7 +67,7 @@ class Repo():
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]
 
-    def remote_list(self, path, missing=False, max_depth=1, from_root=False):
+    def remote_list(self, path, missing=False, max_depth=1, from_root=False, full=False):
         """
         List files from remote repository
 
@@ -80,7 +87,7 @@ class Repo():
         :return: list of files
         """
 
-        return self.backend.remote_list(self, path, missing, max_depth, from_root)
+        return self.backend.remote_list(self, path, missing, max_depth, from_root, full)
 
     def freeze(self, path, force=False, dry_run=False):
         """
@@ -104,8 +111,10 @@ class Repo():
         # TODO [HI] test force mode in freeze
 
         current_app.logger.info("Asked to freeze '%s'" % path)
+        if not (force or self.can_freeze):
+            return []
 
-        remote_list = self.remote_list(path, max_depth=0, from_root=True)
+        remote_list = self.remote_list(path, max_depth=0, from_root=True, full=True)
 
         freezables = self._get_freezable(path, remote_list, force)
 
@@ -156,34 +165,52 @@ class Repo():
                 if fnmatch.fnmatch(path, ex.strip()):
                     current_app.logger.info("Found excluded path: %s with expression %s" % (path, ex.strip()))
                     return
-            if (force or self._can_freeze(path)) and (self.relative_path(path) in remote_list):
+            if self._can_freeze(path, remote_list, force):
                 freezables.append(path)
         else:
             for root, subdirs, files in os.walk(path):
                 for name in files:
                     candidate = os.path.join(root, name)
-                    current_app.logger.info("Evaluating freezable for path: %s -> force %s can_freeze %s in remote_list %s" % (candidate, force, self._can_freeze(path), (self.relative_path(path) in remote_list)))
+                    current_app.logger.info("Evaluating freezable for path: %s -> force %s can_freeze %s in remote_list %s" % (candidate, force, self._can_freeze(path, remote_list, force), (self.relative_path(path) in remote_list)))
                     excluded = False
                     for ex in excludes:
                         if fnmatch.fnmatch(candidate, ex.strip()):
                             current_app.logger.info("Found excluded path: %s with expression %s" % (candidate, ex.strip()))
                             excluded = True
                             break
-                    if not excluded and (force or self._can_freeze(candidate)) and (self.relative_path(candidate) in remote_list):
+                    if not excluded and self._can_freeze(candidate, remote_list, force):
                         freezables.append(candidate)
 
         return freezables
 
-    def _can_freeze(self, file_to_check):
+    def _can_freeze(self, file_to_check, remote_list, force):
         """
         Check if a file should be freezed or not
 
-        :type path: str
-        :param path: Path of a file to check
+        :type file_to_check: str
+        :param file_to_check: Path of a file to check
+
+        :type force: bool
+        :param force: Whether to ignore atime
 
         :rtype: bool
         :return: True if the file should be freezed
         """
+
+        relative_path = self.relative_path(file_to_check)
+        # Check if in remote list
+        remote_file = next((item for item in remote_list if item["Path"] == relative_path), None)
+        if not remote_file:
+            return False
+
+        # Check if modified since pulled
+        # Timezone might cause issue? Should have at most < 1 day time difference
+        # No timezone installed in docker so cannot check
+        last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime']).replace(tzinfo=None)
+        last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime)
+
+        if (last_modif_local - last_modif_remote).days > 0:
+            return False
 
         last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()
         now = datetime.date.today()
@@ -191,7 +218,7 @@ class Repo():
         delta = delta.days
         current_app.logger.info("Checking if we should freeze '%s' (freeze_age=%s): last accessed on %s (%s days ago) =>  %s" % (file_to_check, self.freeze_age, last_access, delta, delta > self.freeze_age))
 
-        return delta > self.freeze_age
+        return force or (delta > self.freeze_age)
 
     def _do_freeze(self, file_to_freeze):
         """

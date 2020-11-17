@@ -30,7 +30,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -68,7 +69,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -113,7 +115,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'user': 'foo',
                 'password': 'pass',
                 'freeze_age': 3,
-                'exclude': "*xml"
+                'exclude': "*xml",
+                'freezable': True
             }
         }
 
@@ -165,7 +168,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'user': 'foo',
                 'password': 'pass',
                 'freeze_age': 3,
-                'exclude': "*xml , *tsv"
+                'exclude': "*xml , *tsv",
+                'freezable': True
             }
         }
 
@@ -215,7 +219,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -254,7 +259,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -306,7 +312,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -336,7 +343,8 @@ class TestReposFreeze(BaricadrTestCase):
                 'url': 'sftp:test-repo/',
                 'user': 'foo',
                 'password': 'pass',
-                'freeze_age': 3
+                'freeze_age': 3,
+                'freezable': True
             }
         }
 
@@ -375,3 +383,114 @@ class TestReposFreeze(BaricadrTestCase):
 
         for nexp_freezed in not_expected_freezed:
             assert os.path.exists(nexp_freezed)
+
+    def test_freeze_excluded_repo(self, app):
+
+        # First get a local repo
+
+        conf = {
+            self.testing_repo: {
+                'backend': 'sftp',
+                'url': 'sftp:test-repo/',
+                'user': 'foo',
+                'password': 'pass',
+                'freeze_age': 3,
+                'freezable': False
+            }
+        }
+
+        app.repos.read_conf_from_str(str(conf))
+
+        repo = app.repos.get_repo(self.testing_repo)
+
+        self.set_old_atime(self.testing_repo)
+
+        not_expected_freezed = [
+            os.path.join(self.testing_repo, 'file.txt'),
+            os.path.join(self.testing_repo, 'file2.txt'),
+            os.path.join(self.testing_repo, 'subdir/subfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.tsv')
+        ]
+
+        for nexp_freezed in not_expected_freezed:
+            assert os.path.exists(nexp_freezed)
+
+        freezed = repo.freeze(self.testing_repo)
+
+        assert freezed == []
+
+        for nexp_freezed in not_expected_freezed:
+            assert os.path.exists(nexp_freezed)
+
+    def test_force_freeze(self, app):
+
+        # First get a local repo
+        conf = {
+            self.testing_repo: {
+                'backend': 'sftp',
+                'url': 'sftp:test-repo/',
+                'user': 'foo',
+                'password': 'pass',
+                'freeze_age': 3,
+                'freezable': True
+            }
+        }
+
+        app.repos.read_conf_from_str(str(conf))
+
+        # Set old atime to subdir (should be ignored by force)
+        repo = app.repos.get_repo(self.testing_repo)
+        repo_dir = os.path.join(self.testing_repo, 'subdir')
+        self.set_old_atime(repo_dir)
+
+        # Modifiy both files with recent atime and old atime
+
+        # File
+        with open(os.path.join(self.testing_repo, 'file.txt'), 'r') as local_file:
+            assert local_file.readline() == 'file content\n'
+
+        with open(os.path.join(self.testing_repo, 'file.txt'), 'w') as local_file:
+            local_file.write('This file was touched locally\n')
+
+        # Subfile
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'subfile content\n'
+
+        with open(repo_dir + '/subfile.txt', 'w') as local_file:
+            local_file.write('This subfile was touched locally\n')
+
+        freezed = repo.freeze(self.testing_repo, force=True)
+
+        expected_freezed = [
+            os.path.join(self.testing_repo, 'file2.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.tsv')
+        ]
+
+        not_expected_freezed = [
+            os.path.join(self.testing_repo, 'file.txt'),
+            os.path.join(self.testing_repo, 'subdir/subfile.txt')
+        ]
+
+        assert sorted(freezed) == sorted(expected_freezed)
+
+        for exp_freezed in expected_freezed:
+            assert not os.path.exists(exp_freezed)
+
+        for nexp_freezed in not_expected_freezed:
+            assert os.path.exists(nexp_freezed)
+
+        with open(os.path.join(self.testing_repo, 'file.txt'), 'r') as local_file:
+            assert local_file.readline() == 'This file was touched locally\n'
+
+        with open(repo_dir + '/subfile.txt', 'r') as local_file:
+            assert local_file.readline() == 'This subfile was touched locally\n'

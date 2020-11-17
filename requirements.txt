@@ -18,5 +18,8 @@ Flask-SQLAlchemy
 flask-migrate
 psycopg2
 
+# Dates
+python-dateutil
+
 # tests
 pytest

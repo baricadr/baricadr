@@ -15,7 +15,8 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/list", json=body)
 
         assert response.status_code == 200
-        assert response.json == file_list
+        remote_file_list = set([file['Path'] for file in response.json])
+        assert remote_file_list == set(file_list)
 
     def test_list_fill_depth_2(self, client):
         """
@@ -26,7 +27,8 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/list", json=body)
 
         assert response.status_code == 200
-        assert response.json == file_list
+        remote_file_list = set([file['Path'] for file in response.json])
+        assert remote_file_list == set(file_list)
 
     def test_list_fill_max_depth(self, client):
         """
@@ -51,7 +53,9 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/list", json=body)
 
         assert response.status_code == 200
-        assert response.json == ["file2.txt"]
+        remote_file_list = [file['Path'] for file in response.json]
+
+        assert remote_file_list == ["file2.txt"]
 
     def test_get_status_unknown(self, client):
         """

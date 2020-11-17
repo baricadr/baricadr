@@ -271,7 +271,7 @@ class TestBackends(BaricadrTestCase):
             repo = app.repos.get_repo(target)
 
             # Order is unreliable, compare sets
-            assert set(repo.remote_list(target, max_depth=2)) == set([
+            assert set([file['Path'] for file in repo.remote_list(target, max_depth=2)]) == set([
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
@@ -298,7 +298,7 @@ class TestBackends(BaricadrTestCase):
             repo = app.repos.get_repo(target)
 
             # Order is unreliable, compare sets
-            assert set(repo.remote_list(target, max_depth=0)) == set([
+            assert set([file['Path'] for file in repo.remote_list(target, max_depth=0)]) == set([
                 'subfile.txt',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
