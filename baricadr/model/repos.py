@@ -172,7 +172,7 @@ class Repo():
             for root, subdirs, files in os.walk(path):
                 for name in files:
                     candidate = os.path.join(root, name)
-                    current_app.logger.info("Evaluating freezable for path: %s -> force %s can_freeze %s in remote_list %s" % (candidate, force, self._can_freeze(path, remote_list, force), (self.relative_path(path) in remote_list)))
+                    current_app.logger.info("Evaluating freezable for path: %s " % (candidate))
                     excluded = False
                     for ex in excludes:
                         if fnmatch.fnmatch(candidate, ex.strip()):
@@ -201,6 +201,7 @@ class Repo():
         relative_path = self.relative_path(file_to_check)
         # Check if in remote list
         remote_file = next((item for item in remote_list if item["Path"] == relative_path), None)
+
         if not remote_file:
             return False
 
@@ -210,6 +211,9 @@ class Repo():
         last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime']).replace(tzinfo=None)
         last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime)
 
+        if force:
+            current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s days" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).days))
+
         if (last_modif_local - last_modif_remote).days > 0:
             return False
 
@@ -217,7 +221,7 @@ class Repo():
         now = datetime.date.today()
         delta = now - last_access
         delta = delta.days
-        current_app.logger.info("Checking if we should freeze '%s' (freeze_age=%s): last accessed on %s (%s days ago) =>  %s" % (file_to_check, self.freeze_age, last_access, delta, delta > self.freeze_age))
+        current_app.logger.info("Checking if we should freeze '%s' (freeze_age=%s): last accessed on %s (%s days ago) =>  %s" % (file_to_check, self.freeze_age, last_access, delta, (force or (delta > self.freeze_age))))
 
         return force or (delta > self.freeze_age)
 
