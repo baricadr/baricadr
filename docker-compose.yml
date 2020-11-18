@@ -1,5 +1,12 @@
 # This is a development docker-compose.yml, don't use this one in production
 version: "3"
+
+x-baricadr-variables: &baricadr-variables
+    BARICADR_RUN_MODE: "dev"
+    BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+    TZ: "Etc/UTC"
+
+
 services:
     baricadr:
         build: ./
@@ -8,10 +15,7 @@ services:
         depends_on:
             - redis
             - db
-        environment:
-            BARICADR_RUN_MODE: "dev"
-            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
-            TZ: "Etc/UTC"
+        environment: *baricadr-variables
         volumes:
             - repos:/repos/
             - ./:/baricadr/
@@ -26,10 +30,7 @@ services:
             - db
         entrypoint: python3
         command: /opt/celery_dev_launch.py
-        environment:
-            BARICADR_RUN_MODE: "dev"
-            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
-            TZ: "Etc/UTC"
+        environment: *baricadr-variables
         volumes:
             - repos:/repos/
             - ./:/baricadr/:ro
@@ -45,10 +46,7 @@ services:
         command: flower -A baricadr.tasks.celery --port=5555 --loglevel=info --autoreload
         depends_on:
             - redis
-        environment:
-            BARICADR_RUN_MODE: "dev"
-            BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
-            TZ: "Etc/UTC"
+        environment: *baricadr-variables
         volumes:
             - ./:/baricadr/:ro
 
