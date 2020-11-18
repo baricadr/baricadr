@@ -216,8 +216,8 @@ class Repo():
         if force:
             current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s seconds" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).total_seconds()))
 
-        # Assuming 1 mn delay? Maybe more?
-        if (last_modif_local - last_modif_remote).total_seconds() > 60:
+        # Assuming 10s delay? Maybe more? -> Might need to be fine-tuned. Tests shows 0.22s
+        if (last_modif_local - last_modif_remote).total_seconds() > 10:
             return False
 
         last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()
