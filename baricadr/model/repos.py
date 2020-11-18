@@ -10,6 +10,8 @@ import dateutil.parser
 
 from flask import current_app
 
+from tzlocal import get_localzone
+
 import yaml
 
 
@@ -206,15 +208,16 @@ class Repo():
             return False
 
         # Check if modified since pulled
-        # Timezone might cause issue? Should have at most < 1 day time difference
-        # No timezone installed in docker so cannot check
-        last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime']).replace(tzinfo=None)
-        last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime)
+        tz = get_localzone()
+
+        last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime'])
+        last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime, tz=tz)
 
         if force:
-            current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s days" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).days))
+            current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s seconds" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).total_seconds()))
 
-        if (last_modif_local - last_modif_remote).days > 0:
+        # Assuming 1 mn delay? Maybe more?
+        if (last_modif_local - last_modif_remote).total_seconds() > 60:
             return False
 
         last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()

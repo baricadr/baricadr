@@ -16,6 +16,7 @@ RUN apk add --no-cache \
     postgresql-libs \
     at \
     postgresql-client \
+    tzdata \
     wget curl unzip man man-pages mdocml-apropos && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \

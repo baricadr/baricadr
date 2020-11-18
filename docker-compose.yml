@@ -11,6 +11,7 @@ services:
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+            TZ: "Etc/UTC"
         volumes:
             - repos:/repos/
             - ./:/baricadr/
@@ -28,6 +29,7 @@ services:
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+            TZ: "Etc/UTC"
         volumes:
             - repos:/repos/
             - ./:/baricadr/:ro
@@ -46,6 +48,7 @@ services:
         environment:
             BARICADR_RUN_MODE: "dev"
             BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+            TZ: "Etc/UTC"
         volumes:
             - ./:/baricadr/:ro
 

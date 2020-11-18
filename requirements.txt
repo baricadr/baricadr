@@ -20,6 +20,7 @@ psycopg2
 
 # Dates
 python-dateutil
+tzlocal
 
 # tests
 pytest
