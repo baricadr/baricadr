@@ -384,7 +384,7 @@ class TestReposFreeze(BaricadrTestCase):
         for nexp_freezed in not_expected_freezed:
             assert os.path.exists(nexp_freezed)
 
-    def test_freeze_excluded_repo(self, app):
+    def test_non_freezable_repo(self, app):
 
         # First get a local repo
 

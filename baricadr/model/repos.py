@@ -34,24 +34,24 @@ class Repo():
         self.conf = conf
 
         # Default behaviour should be non-freeze
-        self.can_freeze = False
+        self.freezable = False
         if 'freezable' in conf and conf['freezable'] is True:
-            self.can_freeze = True
-
-        self.freeze_age = 180
-        if 'freeze_age' in conf:
+            # Skip if not freezable
             if not perms['freezable']:
                 raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
+            # If freezable, set freeze_age
+            self.freezable = True
+            self.freeze_age = 180
+            if 'freeze_age' in conf:
+                try:
+                    conf['freeze_age'] = int(conf['freeze_age'])
+                except ValueError:
+                    raise ValueError("Malformed repository definition, freeze_age must be an integer in '%s'" % conf)
 
-            try:
-                conf['freeze_age'] = int(conf['freeze_age'])
-            except ValueError:
-                raise ValueError("Malformed repository definition, freeze_age must be an integer in '%s'" % conf)
+                if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
+                    raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
 
-            if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
-                raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
-
-            self.freeze_age = conf['freeze_age']
+                self.freeze_age = conf['freeze_age']
 
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
@@ -110,10 +110,9 @@ class Repo():
 
         # TODO [LOW] keep track of md5 if needed for checking
         # TODO [LOW] check rclone check -> does it work without hash support with sftp in rclone?
-        # TODO [HI] test force mode in freeze
 
         current_app.logger.info("Asked to freeze '%s'" % path)
-        if not (force or self.can_freeze):
+        if not (force or self.freezable):
             return []
 
         remote_list = self.remote_list(path, max_depth=0, from_root=True, full=True)
@@ -193,6 +192,9 @@ class Repo():
         :type file_to_check: str
         :param file_to_check: Path of a file to check
 
+        :type remote_list: list
+        :param remote_list: List of dicts containing informations about remote files (path, mtime)
+
         :type force: bool
         :param force: Whether to ignore atime
 
@@ -213,12 +215,16 @@ class Repo():
         last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime'])
         last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime, tz=tz)
 
-        if force:
-            current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s seconds" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).total_seconds()))
+        current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s seconds" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).total_seconds()))
 
         # Assuming 10s delay? Maybe more? -> Might need to be fine-tuned. Tests shows 0.22s
         if (last_modif_local - last_modif_remote).total_seconds() > 10:
             return False
+
+        # Skip check if force
+        if force:
+            current_app.logger.info("Checking if we should freeze '%s' => force is set to True, freezing" % (file_to_check))
+            return True
 
         last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()
         now = datetime.date.today()
@@ -226,7 +232,7 @@ class Repo():
         delta = delta.days
         current_app.logger.info("Checking if we should freeze '%s' (freeze_age=%s): last accessed on %s (%s days ago) =>  %s" % (file_to_check, self.freeze_age, last_access, delta, (force or (delta > self.freeze_age))))
 
-        return force or (delta > self.freeze_age)
+        return delta > self.freeze_age
 
     def _do_freeze(self, file_to_freeze):
         """

@@ -480,9 +480,9 @@ class TestApiFreeze(BaricadrTestCase):
         for not_exp_freezed in not_expected_freezed:
             assert os.path.exists(not_exp_freezed)
 
-    def test_freeze_disabled(self, app, client):
+    def test_non_freezable_api(self, app, client):
         """
-        Try to freeze a single file in a disabled repo
+        Try to freeze a single file in a non freezable repo
         """
         repo_dir = os.path.join('/repos/test_repo_freeze_disabled/')
 

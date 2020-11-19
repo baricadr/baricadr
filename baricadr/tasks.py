@@ -19,7 +19,6 @@ celery = create_celery(app)
 
 
 def on_failure(self, exc, task_id, args, kwargs, einfo):
-    app.logger.info("On_failure called!")
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
     dbtask.status = 'failed'
     dbtask.finished = datetime.utcnow()
@@ -46,7 +45,7 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
                 res = AsyncResult(wait_id)
                 if str(res.ready()).lower() == "true":
                     break
-                time.sleep(2)
+                time.sleep(1)
                 tries += 1
             if tries == app.config['MAX_TASK_DELAY']:
                 wait_for_failed = True
