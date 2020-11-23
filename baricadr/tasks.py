@@ -1,6 +1,6 @@
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import baricadr.api
 from baricadr.app import create_app, create_celery
@@ -115,10 +115,14 @@ def cleanup_zombie_tasks(self):
 
     # TODO [HI] delete old tasks in zombie task to keep track of finished tasks for a while (configurable delay)
 
+    max_delay = app.config['MAX_TASK_DELAY']
+    max_date = datetime.utcnow() - timedelay(seconds=max_delay)
+
     self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
     num = 0
-    running_tasks = BaricadrTask.query.all()
+    # Filter tasks older than max_delay
+    running_tasks = BaricadrTask.query.filter(started < max_date)
     for rt in running_tasks:
         app.logger.debug("Checking zombie for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
         failed_status = False

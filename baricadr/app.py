@@ -179,3 +179,14 @@ def configure_logging(app):
         '[in %(pathname)s:%(lineno)d]')
     )
     app.logger.addHandler(mail_handler)
+
+def freeze_all_repos(repos):
+
+    for path, repo in repos.items():
+        repo.freeze(path)
+
+
+def kill_zombies(repos):
+    pass
+
+
