@@ -16,12 +16,15 @@ jobs:
 
   py_test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: [3.6, 3.7]
+        python-version: ${{ matrix.python-version }}
     - name: Prepare conf
       run: cp local.example.cfg local.cfg
     - name: Build containers
