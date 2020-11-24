@@ -12,7 +12,8 @@ class TestApiFreeze(BaricadrTestCase):
     testing_repos = [
         "/repos/test_repo_freeze/",
         "/repos/test_repo_freeze_exclude/",
-        "/repos/test_repo_freeze_exclude_multiple/"
+        "/repos/test_repo_freeze_exclude_multiple/",
+        "/repos/test_repo_freeze_disabled/"
     ]
 
     def setup_method(self):
@@ -479,6 +480,29 @@ class TestApiFreeze(BaricadrTestCase):
         for not_exp_freezed in not_expected_freezed:
             assert os.path.exists(not_exp_freezed)
 
+    def test_non_freezable_api(self, app, client):
+        """
+        Try to freeze a single file in a non freezable repo
+        """
+        repo_dir = os.path.join('/repos/test_repo_freeze_disabled/')
+
+        self.freeze_and_wait(client, repo_dir)
+
+        not_expected_freezed = [
+            os.path.join(repo_dir, 'subdir/subsubdir2/poutrelle.xml'),
+            os.path.join(repo_dir, 'subdir/subsubdir/poutrelle.xml'),
+            os.path.join(repo_dir, 'file.txt'),
+            os.path.join(repo_dir, 'file2.txt'),
+            os.path.join(repo_dir, 'subdir/subfile.txt'),
+            os.path.join(repo_dir, 'subdir/subsubdir2/subsubfile.txt'),
+            os.path.join(repo_dir, 'subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file'),
+            os.path.join(repo_dir, 'subdir/subsubdir/subsubfile.txt'),
+            os.path.join(repo_dir, 'subdir/subsubdir/poutrelle.tsv')
+        ]
+
+        for not_exp_freezed in not_expected_freezed:
+            assert os.path.exists(not_exp_freezed)
+
     def freeze_quick(self, client, path, email=None):
         data = {
             'path': path
@@ -514,5 +538,6 @@ class TestApiFreeze(BaricadrTestCase):
 
         freeze_id = self.freeze_quick(client, path)
         self.wait_for_freeze(client, freeze_id)
+
 
 # TODO [HI] better test for freezeing a dir when a subdir is already freezeing: multiple subdirs in parallel, timeout waiting

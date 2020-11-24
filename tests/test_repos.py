@@ -116,6 +116,7 @@ class TestRepos(BaricadrTestCase):
                 'url': 'google',
                 'user': 'someone',
                 'password': 'xxxxx',
+                'freezable': True,
                 'freeze_age': 12
             },
         }
@@ -131,6 +132,7 @@ class TestRepos(BaricadrTestCase):
                 'url': 'google',
                 'user': 'someone',
                 'password': 'xxxxx',
+                'freezable': True,
                 'freeze_age': 'xxxx'
             },
         }
@@ -145,6 +147,7 @@ class TestRepos(BaricadrTestCase):
                 'url': 'google',
                 'user': 'someone',
                 'password': 'xxxxx',
+                'freezable': True
             },
         }
 
@@ -159,6 +162,7 @@ class TestRepos(BaricadrTestCase):
                 'url': 'google',
                 'user': 'someone',
                 'password': 'xxxxx',
+                'freezable': True,
                 'freeze_age': 1
             },
         }
@@ -173,6 +177,7 @@ class TestRepos(BaricadrTestCase):
                 'url': 'google',
                 'user': 'someone',
                 'password': 'xxxxx',
+                'freezable': True,
                 'freeze_age': 100000
             },
         }

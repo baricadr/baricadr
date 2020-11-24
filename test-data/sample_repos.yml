@@ -3,24 +3,35 @@
     url: sftp:/prefix/on/remote/host
     user: foo
     password: pass
+    freezable: True
 
 /repos/another/local/path:
     backend: s3
     url: google
     user: someone
     password: xxxxx
+    freezable: True
 
 /repos/test_repo/:
     backend: sftp
     url: sftp:test-repo
     user: foo
     password: pass
+    freezable: True
 
 /repos/test_repo_freeze/:
     backend: sftp
     url: sftp:test-repo
     user: foo
     password: pass
+    freezable: True
+
+/repos/test_repo_freeze_disabled/:
+    backend: sftp
+    url: sftp:test-repo
+    user: foo
+    password: pass
+    freezable: False
 
 /repos/test_repo_freeze_exclude/:
     backend: sftp
@@ -28,6 +39,7 @@
     user: foo
     password: pass
     exclude: "*xml"
+    freezable: True
 
 /repos/test_repo_freeze_exclude_multiple/:
     backend: sftp
@@ -35,6 +47,7 @@
     user: foo
     password: pass
     exclude: "*xml , *tsv"
+    freezable: True
 
 /repos/test_repo_exclude/:
     backend: sftp
@@ -42,6 +55,7 @@
     user: foo
     password: pass
     exclude: "*xml"
+    freezable: True
 
 /repos/test_repo_exclude_multiple/:
     backend: sftp
@@ -49,6 +63,7 @@
     user: foo
     password: pass
     exclude: "*xml , *tsv"
+    freezable: True
 
 /repos/test_repo_freeze_age/:
     backend: sftp
@@ -56,3 +71,4 @@
     user: foo
     password: pass
     freeze_age: 10
+    freezable: True

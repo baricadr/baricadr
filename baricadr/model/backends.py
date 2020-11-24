@@ -86,7 +86,7 @@ class RcloneBackend(Backend):
         return len(remote_list) == 1
 
     # TODO [LOW] we could use the --hash option of lsjson (may be slow, but may be useful)
-    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False):
+    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
         """
         List content in a distant path
         """
@@ -132,19 +132,28 @@ class RcloneBackend(Backend):
         for entry in json_output:
             if not entry['IsDir']:
                 if from_root:
-                    remote_list.append(os.path.join(path_rel_prefix, entry['Path']))
+                    file_path = os.path.join(path_rel_prefix, entry['Path'])
                 else:
-                    remote_list.append(entry['Path'])
+                    file_path = entry['Path']
+
+                if full:
+                    entry['Path'] = file_path
+                    remote_list.append(entry)
+                else:
+                    remote_list.append({'Path': file_path})
+
         tempRcloneConfig.close()
         if missing:
-            remote_list = self.missing_list(path, remote_list, max_depth, repo)
+            remote_list = self.missing_list(path, remote_list, max_depth, repo, full)
 
         current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
 
         return remote_list
 
-    def missing_list(self, path, remote_list, max_depth, repo):
-        remote_list = set(remote_list)
+    def missing_list(self, path, remote_list, max_depth, repo, full=False):
+
+        remote_set = set([value['Path'] for value in remote_list])
+
         if os.path.isfile(path):
             file_set = set([repo.relative_path(path)])
             return list(remote_list - file_set)
@@ -156,7 +165,12 @@ class RcloneBackend(Backend):
                 rel_file = os.path.join(rel_dir, file_name)
                 file_set.add(rel_file.lstrip("./"))
 
-        return sorted(list(remote_list - file_set))
+        sorted_list = sorted(list(remote_set - file_set))
+
+        if full:
+            return [file_dict for file_dict in remote_list if file_dict['Path'] in sorted_list]
+        else:
+            return [{'Path': file_path} for file_path in sorted_list]
 
     def restricted_walk(self, path, max_depth):
         dirs, nondirs = [], []

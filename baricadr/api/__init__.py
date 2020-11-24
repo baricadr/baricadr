@@ -166,7 +166,7 @@ def task_show(task_id):
     error = 'false'
 
     # Make exceptions readable
-    if isinstance(info, RuntimeError) or isinstance(info, TypeError):
+    if isinstance(info, Exception):
         error = 'true'
         info = str(info)
 

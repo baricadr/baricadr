@@ -15,6 +15,9 @@ flask-migrate
 psycopg2
 email_validator
 
+# Dates
+python-dateutil
+tzlocal
 
 # Only needed in dev mode (ie to use docker_celery/celery_dev_launch.py)
 psutil
