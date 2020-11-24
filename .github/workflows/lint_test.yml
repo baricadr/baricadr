@@ -1,0 +1,36 @@
+name: Lint and test
+on: ["push", "pull_request"]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install flake8
+      run: pip install flake8 flake8-import-order
+    - name: Flake8
+      run: flake8 baricadr tests --ignore=E501,W504
+
+  py_test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: [3.6, 3.7]
+    - name: Prepare conf
+      run: cp local.example.cfg local.cfg
+    - name: Build containers
+      run: docker-compose build
+    - name: Launch containers
+      run: |
+        docker-compose up -d
+        sleep 15
+        docker-compose logs
+    - name: Run tests
+      run: |
+        docker-compose exec baricadr pytest -v --log-cli-level debug
