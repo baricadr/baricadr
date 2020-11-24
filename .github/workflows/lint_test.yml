@@ -36,4 +36,4 @@ jobs:
         docker-compose logs
     - name: Run tests
       run: |
-        docker-compose exec baricadr pytest -v --log-cli-level debug
+        docker-compose exec -T baricadr pytest -v --log-cli-level debug
