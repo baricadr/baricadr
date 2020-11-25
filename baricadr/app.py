@@ -4,6 +4,8 @@ from celery import Celery
 
 from flask import Flask, g, render_template
 
+from flask_apscheduler import APScheduler
+
 from .api import api
 # Import model classes for flaks migrate
 from .db_models import BaricadrTask  # noqa: F401
@@ -49,12 +51,14 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         if config:
             app.config.from_pyfile(config)
 
-        max_delay = app.config.get('MAX_TASK_DELAY', '21600')
-        try:
-            max_delay = int(max_delay)
-        except ValueError:
-            max_delay = 21600
-        app.config['MAX_TASK_DELAY'] = max_delay
+        app.config['MAX_TASK_DURATION'] = _get_int_value(app.config.get('MAX_TASK_DURATION'), 21600)
+
+        if 'CLEANUP_ZOMBIES_INTERVAL' in app.config:
+            app.config['CLEANUP_ZOMBIES_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_ZOMBIES_INTERVAL'), 3600)
+        if 'CLEANUP_INTERVAL' in app.config:
+            app.config['CLEANUP_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_INTERVAL'), 21600)
+        if 'FREEZE_INTERVAL' in app.config:
+            app.config['FREEZE_INTERVAL'] = _get_int_value(app.config.get('FREEZE_INTERVAL'), 86400)
 
         # Load the list of baricadr repositories
         app.backends = backends.Backends()
@@ -73,6 +77,18 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
 
         error_pages(app)
         gvars(app)
+
+        # Should it be on the worker?
+        if app.is_worker:
+            scheduler = APScheduler()
+            scheduler.init_app(app)
+            scheduler.start()
+            if app.config.get("CLEANUP_ZOMBIES_INTERVAL"):
+                scheduler.add_job(func=cleanup_zombies, args=[app], trigger='interval', seconds=app.config.get("CLEANUP_ZOMBIES_INTERVAL"), id="cleanup_zombies_job")
+            if app.config.get("CLEANUP_INTERVAL"):
+                scheduler.add_job(func=cleanup, args=[app], trigger='interval', seconds=app.config.get("CLEANUP_INTERVAL"), id="cleanup_job")
+            if app.config.get("FREEZE_INTERVAL"):
+                scheduler.add_job(func=freeze_repos, args=[app], trigger='interval', seconds=app.config.get("FREEZE_INTERVAL"), id="freeze_job")
 
     return app
 
@@ -180,13 +196,36 @@ def configure_logging(app):
     )
     app.logger.addHandler(mail_handler)
 
-def freeze_all_repos(repos):
 
-    for path, repo in repos.items():
-        repo.freeze(path)
+def freeze_repos(app):
+
+    for path, repo in app.repos.items():
+        if not repo.freezable:
+            continue
+
+        touching_task_id = app.repos.is_already_touching(path)
+        if not touching_task_id:
+            locking_task_id = app.repos.is_locked_by_subdir(path)
+
+            task = app.celery.send_task('freeze', (path, None, locking_task_id))
+            task_id = task.task_id
+
+            pt = BaricadrTask(path=path, type='freeze', task_id=task_id)
+            db.session.add(pt)
+            db.session.commit()
 
 
-def kill_zombies(repos):
-    pass
+def cleanup(app):
+    app.celery.send_task('cleanup_tasks')
 
 
+def cleanup_zombies(app):
+    app.celery.send_task('cleanup_zombies_tasks')
+
+
+def _get_int_value(config_val, default):
+    try:
+        config_val = int(config_val)
+    except ValueError:
+        config_val = default
+    return config_val
