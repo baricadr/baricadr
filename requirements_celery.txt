@@ -1,5 +1,4 @@
 # Minimal dependencies for celery workers
-# TODO: Fix versions
 celery<5  # Flower doesn't support celery 5 yet
 flower
 redis
@@ -23,6 +22,3 @@ tzlocal
 # Only needed in dev mode (ie to use docker_celery/celery_dev_launch.py)
 psutil
 watchdog
-
-# Scheduler
-Flask-APScheduler
