@@ -48,13 +48,13 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
         app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
             tries = 0
-            while tries < app.config['MAX_TASK_DURATIOn']:  # Wait at most 6h
+            while tries < app.config['MAX_TASK_DURATION']:  # Wait at most 6h
                 res = AsyncResult(wait_id)
                 if str(res.ready()).lower() == "true":
                     break
                 time.sleep(1)
                 tries += 1
-            if tries == app.config['MAX_TASK_DURATIOn']:
+            if tries == app.config['MAX_TASK_DURATION']:
                 wait_for_failed = True
                 app.logger.warning("Waited too long for task '%s', giving up" % (wait_id))
                 break
