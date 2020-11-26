@@ -146,7 +146,7 @@ def cleanup_tasks(self):
         Cleanup finished and failed tasks
     """
 
-    finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_["failed", "finished"])
+    finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]))
 
     num = 0
     for ft in finished_tasks:

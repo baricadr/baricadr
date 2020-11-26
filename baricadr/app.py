@@ -198,29 +198,29 @@ def configure_logging(app):
 
 
 def freeze_repos(app):
+    with app.app_context():
 
-    for path, repo in app.repos.items():
-        if not repo.freezable:
-            continue
+        for path, repo in app.repos.repos.items():
+            if not repo.freezable:
+                continue
 
-        touching_task_id = app.repos.is_already_touching(path)
-        if not touching_task_id:
-            locking_task_id = app.repos.is_locked_by_subdir(path)
+            touching_task_id = app.repos.is_already_touching(path)
+            if not touching_task_id:
+                locking_task_id = app.repos.is_locked_by_subdir(path)
 
-            task = app.celery.send_task('freeze', (path, None, locking_task_id))
-            task_id = task.task_id
+                task = app.celery.send_task('freeze', (path, None, locking_task_id))
+                task_id = task.task_id
 
-            pt = BaricadrTask(path=path, type='freeze', task_id=task_id)
-            db.session.add(pt)
-            db.session.commit()
-
+                pt = BaricadrTask(path=path, type='freeze', task_id=task_id)
+                db.session.add(pt)
+                db.session.commit()
 
 def cleanup(app):
     app.celery.send_task('cleanup_tasks')
 
 
 def cleanup_zombies(app):
-    app.celery.send_task('cleanup_zombies_tasks')
+    app.celery.send_task('cleanup_zombie_tasks')
 
 
 def _get_int_value(config_val, default):
