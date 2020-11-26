@@ -1,6 +1,6 @@
 # Baricadr
 
-[![Build](https://travis-ci.org/baricadr/baricadr.svg?branch=master)](https://travis-ci.org/baricadr/baricadr)
+[![Lint and test](https://github.com/baricadr/baricadr/workflows/Lint%20and%20test/badge.svg)](https://github.com/baricadr/baricadr/actions)
 
 Baricadr is a small application designed to:
 

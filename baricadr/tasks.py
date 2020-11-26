@@ -1,8 +1,7 @@
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
-import baricadr.api
 from baricadr.app import create_app, create_celery
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db, mail
@@ -20,6 +19,14 @@ celery = create_celery(app)
 
 def on_failure(self, exc, task_id, args, kwargs, einfo):
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
+
+    if "email" in kwargs and kwargs['email']:
+        msg = Message(subject="Failed to %s" % (dbtask.type),
+                      body="Failed to %s %s" % (dbtask.type, dbtask.path),  # TODO [LOW] better text
+                      sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
+                      recipients=kwargs['email'])
+        mail.send(msg)
+
     dbtask.status = 'failed'
     dbtask.finished = datetime.utcnow()
     db.session.commit()
@@ -41,13 +48,13 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
         app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
             tries = 0
-            while tries < app.config['MAX_TASK_DELAY']:  # Wait at most 6h
+            while tries < app.config['MAX_TASK_DURATION']:  # Wait at most 6h
                 res = AsyncResult(wait_id)
                 if str(res.ready()).lower() == "true":
                     break
                 time.sleep(1)
                 tries += 1
-            if tries == app.config['MAX_TASK_DELAY']:
+            if tries == app.config['MAX_TASK_DURATION']:
                 wait_for_failed = True
                 app.logger.warning("Waited too long for task '%s', giving up" % (wait_id))
                 break
@@ -113,30 +120,43 @@ def cleanup_zombie_tasks(self):
     If for some reason a task is in the db but not running/in queue, it means that it is finished or that it got interrupted.
     """
 
-    # TODO [HI] delete old tasks in zombie task to keep track of finished tasks for a while (configurable delay)
+    max_delay = app.config['MAX_TASK_DURATION']
+    max_date = datetime.utcnow() - timedelta(seconds=max_delay)
 
     self.update_state(state='PROGRESS', meta={'status': 'starting task'})
 
     num = 0
-    running_tasks = BaricadrTask.query.all()
+    # Filter tasks older than max_delay and kill them
+    running_tasks = BaricadrTask.query.filter(BaricadrTask.started < max_date)
     for rt in running_tasks:
-        app.logger.debug("Checking zombie for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
-        failed_status = False
-        try:
-            status = baricadr.api.task_show(rt.task_id).json
-        except:  # noqa: E722
-            failed_status = True
-
-        if failed_status or (status['finished'] == "true"):
-            app.logger.warning("Detected zombie task '%s' for path '%s'" % (rt.task_id, rt.path))
-            # We're not auto rescheduling zombies as we don't know what happened => it could be dangerous (infinite loop, data overwriting, ...)
-            db.session.delete(rt)
-            db.session.commit()
+        # Kill celery task process if it's still running (or state unknown)
+        # Task status should be reliable enough..?
+        # No checking task with "waiting" status, they should fail on their own
+        if rt.status == 'started':
+            app.logger.debug("Checking zombie for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
+            AsyncResult(rt.task_id).revoke(terminate=True)
             num += 1
+        # Should we delete the task from db also?
+    app.logger.debug("%s zombie tasks killed (%s remaining)" % (num, running_tasks.count() - num))
 
-    app.logger.debug("%s zombie tasks killed (%s remaining)" % (num, len(running_tasks) - num))
 
-    self.update_state(state='PROGRESS', meta={'status': '%s zombie tasks killed (%s remaining)' % (num, len(running_tasks) - num)})
+@celery.task(bind=True, name="cleanup_tasks")
+def cleanup_tasks(self):
+    """
+        Cleanup finished and failed tasks
+    """
+
+    finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]))
+
+    num = 0
+    for ft in finished_tasks:
+        app.logger.debug("Clearing finished task %s with status %s (type = %s, path = %s)'" % (ft.task_id, ft.status, ft.type, ft.path))
+        db.session.delete(ft)
+        db.session.commit()
+        num += 1
+
+    app.logger.debug("Cleared %s finished tasks" % (num))
+    self.update_state(state='PROGRESS', meta={'status': "Cleared %s finished tasks" % (num)})
 
 
 @task_postrun.connect
