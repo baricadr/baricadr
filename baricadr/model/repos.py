@@ -53,6 +53,21 @@ class Repo():
 
                 self.freeze_age = conf['freeze_age']
 
+            self.auto_freeze = False
+            if 'auto_freeze' in conf and conf['auto_freeze'] is True:
+                self.auto_freeze = True
+                self.auto_freeze_interval = 7
+                if 'auto_freeze_interval' in conf:
+                    try:
+                        conf['auto_freeze_interval'] = int(conf['auto_freeze_interval'])
+                    except ValueError:
+                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer in '%s'" % conf)
+
+                    if conf['auto_freeze_interval'] < 2 or conf['auto_freeze_interval'] > 10000:
+                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer >1 and <10000 in '%s'" % conf)
+
+                self.auto_freeze_interval = conf['auto_freeze_interval']
+
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
     def is_in_repo(self, path):

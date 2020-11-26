@@ -57,8 +57,6 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
             app.config['CLEANUP_ZOMBIES_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_ZOMBIES_INTERVAL'), 3600)
         if 'CLEANUP_INTERVAL' in app.config:
             app.config['CLEANUP_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_INTERVAL'), 21600)
-        if 'FREEZE_INTERVAL' in app.config:
-            app.config['FREEZE_INTERVAL'] = _get_int_value(app.config.get('FREEZE_INTERVAL'), 86400)
 
         # Load the list of baricadr repositories
         app.backends = backends.Backends()
@@ -87,8 +85,8 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
                 scheduler.add_job(func=cleanup_zombies, args=[app], trigger='interval', seconds=app.config.get("CLEANUP_ZOMBIES_INTERVAL"), id="cleanup_zombies_job")
             if app.config.get("CLEANUP_INTERVAL"):
                 scheduler.add_job(func=cleanup, args=[app], trigger='interval', seconds=app.config.get("CLEANUP_INTERVAL"), id="cleanup_job")
-            if app.config.get("FREEZE_INTERVAL"):
-                scheduler.add_job(func=freeze_repos, args=[app], trigger='interval', seconds=app.config.get("FREEZE_INTERVAL"), id="freeze_job")
+            # Setup freeze job for compatible repos
+            setup_freeze_tasks(app, scheduler)
 
     return app
 
@@ -197,23 +195,27 @@ def configure_logging(app):
     app.logger.addHandler(mail_handler)
 
 
-def freeze_repos(app):
+def setup_freeze_tasks(app, scheduler):
     with app.app_context():
 
         for path, repo in app.repos.repos.items():
-            if not repo.freezable:
+            if not repo.freezable or not repo.auto_freeze:
                 continue
+            app.logger.debug("Creating scheduler job for path : %s with auto_freeze_interval : %s" % (path, repo.auto_freeze_interval))
+            scheduler.add_job(func=freeze_repo, args=[app, path], trigger='interval', days=repo.auto_freeze_interval, id="auto_freeze_%s" % (path), name="Auto freeze job for path %s" % (path))
 
-            touching_task_id = app.repos.is_already_touching(path)
-            if not touching_task_id:
-                locking_task_id = app.repos.is_locked_by_subdir(path)
 
-                task = app.celery.send_task('freeze', (path, None, locking_task_id))
-                task_id = task.task_id
+def freeze_repo(app, repo_path):
+    touching_task_id = app.repos.is_already_touching(repo_path)
+    if not touching_task_id:
+        locking_task_id = app.repos.is_locked_by_subdir(repo_path)
+        task = app.celery.send_task('freeze', (repo_path, None, locking_task_id))
+        task_id = task.task_id
 
-                pt = BaricadrTask(path=path, type='freeze', task_id=task_id)
-                db.session.add(pt)
-                db.session.commit()
+        pt = BaricadrTask(path=repo_path, type='freeze', task_id=task_id)
+        db.session.add(pt)
+        db.session.commit()
+
 
 def cleanup(app):
     app.celery.send_task('cleanup_tasks')
