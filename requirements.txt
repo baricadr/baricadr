@@ -1,5 +1,4 @@
 # Requirements for the Flask webapp
-# TODO: Fix versions
 # base
 Flask
 Flask-Mail
@@ -23,8 +22,5 @@ psycopg2
 python-dateutil
 tzlocal
 
-# Tests
+# tests
 pytest
-
-# Scheduler
-Flask-APScheduler
