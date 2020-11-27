@@ -62,13 +62,13 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
     if not wait_for_failed:
         app.logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
 
-        self.update_state(state='PROGRESS', meta={'status': 'starting task'})
+        self.update_state(state='PROGRESS')
 
         # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
         asked_path = os.path.abspath(path)
 
         repo = app.repos.get_repo(asked_path)
-        self.update_state(state='PROGRESS', meta={'status': vocab[type]})
+        self.update_state(state='PROGRESS')
 
         dbtask.status = vocab[type]
         db.session.commit()
@@ -78,11 +78,11 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
         else:
             repo.freeze(asked_path)
 
-        self.update_state(state='PROGRESS', meta={'status': 'success'})
+        self.update_state(state='PROGRESS')
         dbtask.status = 'finished'
 
     else:
-        self.update_state(state='PROGRESS', meta={'status': 'failed'})
+        self.update_state(state='PROGRESS')
         dbtask.status = 'failed'
 
     dbtask.finished = datetime.utcnow()
@@ -123,7 +123,7 @@ def cleanup_zombie_tasks(self):
     max_delay = app.config['MAX_TASK_DURATION']
     max_date = datetime.utcnow() - timedelta(seconds=max_delay)
 
-    self.update_state(state='PROGRESS', meta={'status': 'starting task'})
+    self.update_state(state='PROGRESS')
 
     num = 0
     # Filter tasks older than max_delay and kill them
@@ -156,7 +156,7 @@ def cleanup_tasks(self):
         num += 1
 
     app.logger.debug("Cleared %s finished tasks" % (num))
-    self.update_state(state='PROGRESS', meta={'status': "Cleared %s finished tasks" % (num)})
+    self.update_state(state='PROGRESS')
 
 
 @task_postrun.connect

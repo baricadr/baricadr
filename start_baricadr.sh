@@ -30,7 +30,4 @@ flask db upgrade
 atd
 echo "sleep 10; curl http://localhost/zombie" | at now
 
-# TODO [HI] schedule regular zombie killing
-# TODO [HI] schedule regular autofreezing
-
 /usr/bin/supervisord

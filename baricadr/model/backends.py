@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import time
 from subprocess import PIPE, Popen
 
 from flask import current_app
@@ -233,6 +234,15 @@ class SftpBackend(RcloneBackend):
             current_app.logger.error(err)
             raise RuntimeError("Child was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
         tempRcloneConfig.close()
+
+        # Touch all files to set atime to now (but not mtime)
+        if self.remote_is_single(repo, path):
+            os.utime(path, (time.time(), os.stat(path).st_mtime))
+        else:
+            for root, subdirs, files in os.walk(path):
+                for name in files:
+                    candidate = os.path.join(root, name)
+                    os.utime(candidate, (time.time(), os.stat(candidate).st_mtime))
 
 
 class S3Backend(RcloneBackend):
