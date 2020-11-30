@@ -169,8 +169,9 @@ def task_show(task_id):
     if isinstance(info, Exception):
         error = 'true'
         info = str(info)
+        # info will be empty if not Exception (none of our tasks have a return value)
+        current_app.logger.debug("Task state from Celery: %s" % res.info)
 
-    current_app.logger.debug("Task state from Celery: %s" % res.info)
     status['task'] = {
         'finished': str(res.ready()).lower(),
         'error': error,
