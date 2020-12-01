@@ -55,12 +55,10 @@ class TestReposFreeze(BaricadrTestCase):
             os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.tsv')
         ]
 
-
         for exp_freezed in expected_freezed:
             assert not os.path.exists(exp_freezed)
 
         assert sorted(freezed) == sorted(expected_freezed)
-
 
     def test_freeze_age_subdir(self, app):
 

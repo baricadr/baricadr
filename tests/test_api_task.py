@@ -13,7 +13,7 @@ class TestApiTask(BaricadrTestCase):
         assert response.json['task'] == {'finished': 'false', 'error': 'false', 'info': None}
         assert response.status_code == 200
 
-    def test_delete_unknown(self,client):
+    def test_delete_unknown(self, client):
         """
             Try to delete a non existing task
         """
