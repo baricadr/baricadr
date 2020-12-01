@@ -70,7 +70,7 @@ class TestApiPull(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % pull_id)
+            response = client.get('/tasks/status/%s' % pull_id)
 
             assert response.status_code == 200
 
@@ -109,7 +109,7 @@ class TestApiPull(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % pull_id)
+            response = client.get('/tasks/status/%s' % pull_id)
 
             assert response.status_code == 200
 
@@ -370,7 +370,7 @@ class TestApiPull(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % pull_id)
+            response = client.get('/tasks/status/%s' % pull_id)
 
             assert response.status_code == 200
 

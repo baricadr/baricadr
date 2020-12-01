@@ -169,7 +169,7 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 10:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 
@@ -221,7 +221,7 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 10:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 
@@ -522,7 +522,7 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 10:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 

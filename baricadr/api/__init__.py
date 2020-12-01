@@ -134,7 +134,7 @@ def tasks():
     return jsonify(tasks_json)
 
 
-@api.route('/status/<task_id>', methods=['GET'])
+@api.route('/tasks/status/<task_id>', methods=['GET'])
 def task_show(task_id):
     current_app.logger.info("API call: Getting status of task %s" % task_id)
 
@@ -180,11 +180,33 @@ def task_show(task_id):
     return jsonify(status)
 
 
+@api.route('/tasks/remove/<task_id>', methods=['GET'])
+def kill_task(task_id):
+    current_app.logger.info("API call: Killing task %s" % task_id)
+    status = {
+        'info': "",
+        'error': ""
+    }
+    # Get task from DB
+    db_task = BaricadrTask.query.filter_by(task_id=task_id)
+    if db_task.count():
+        db_task = db_task.one()
+        if db_task.status in ['started', 'waiting']:
+            AsyncResult(task_id).revoke(terminate=True)
+
+        db.session.delete(db_task)
+        db.session.commit()
+        status['info'] = "Task %s removed" % (task_id)
+
+    else:
+        status['error'] = 'Task not found in Baricadr database.'
+
+    return jsonify(status)
+
+
 @api.route('/zombie', methods=['GET'])
 def zombie():
     current_app.logger.info("API call: Killing zombies")
     task = current_app.celery.send_task('cleanup_zombie_tasks')
     task_id = task.task_id
     return jsonify({'task': task_id})
-
-# TODO [HI] add method to kill a task
