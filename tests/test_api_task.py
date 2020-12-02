@@ -57,4 +57,3 @@ class TestApiTask(BaricadrTestCase):
         assert 'task' in response.json
 
         return response.json['task']
-
