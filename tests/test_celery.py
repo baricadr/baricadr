@@ -31,5 +31,4 @@ class TestCelery(BaricadrTestCase):
         res = client.get('/tasks/status/{}'.format(task_id))
 
         assert res.json['status'] == 'failed'
-        assert res.json['task']['error'] == 'true'
-        assert res.json['task']['info'] == "AsyncResult requires valid id, not <class 'NoneType'>"
+        assert res.json['error'] == "AsyncResult requires valid id, not <class 'NoneType'>"

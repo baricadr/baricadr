@@ -74,13 +74,14 @@ class TestApiPull(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -113,13 +114,14 @@ class TestApiPull(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -374,13 +376,14 @@ class TestApiPull(BaricadrTestCase):
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
     def pull_and_wait(self, client, path):
 

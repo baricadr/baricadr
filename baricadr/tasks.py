@@ -17,8 +17,13 @@ app.app_context().push()
 celery = create_celery(app)
 
 
+class TimeoutError(Exception):
+    pass
+
+
 def on_failure(self, exc, task_id, args, kwargs, einfo):
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
+    dbtask.error = str(exc)
 
     if "email" in kwargs and kwargs['email']:
         msg = Message(subject="Failed to %s" % (dbtask.type),
@@ -43,7 +48,6 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
 
     vocab = {'pull': 'pulling', 'freeze': 'freezing'}
 
-    wait_for_failed = False
     if wait_for:
         app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
@@ -55,50 +59,38 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
                 time.sleep(1)
                 tries += 1
             if tries == app.config['MAX_TASK_DURATION']:
-                wait_for_failed = True
                 app.logger.warning("Waited too long for task '%s', giving up" % (wait_id))
-                break
+                raise TimeoutError("Timeout waiting for task %s" % (wait_id))
 
-    if not wait_for_failed:
-        app.logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
+    app.logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
 
-        self.update_state(state='PROGRESS')
+    self.update_state(state='PROGRESS')
 
-        # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
-        asked_path = os.path.abspath(path)
+    # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
+    asked_path = os.path.abspath(path)
 
-        repo = app.repos.get_repo(asked_path)
-        self.update_state(state='PROGRESS')
+    repo = app.repos.get_repo(asked_path)
+    self.update_state(state='PROGRESS')
 
-        dbtask.status = vocab[type]
-        db.session.commit()
+    dbtask.status = vocab[type]
+    db.session.commit()
 
-        if type == "pull":
-            repo.pull(asked_path)
-        else:
-            repo.freeze(asked_path)
-
-        self.update_state(state='PROGRESS')
-        dbtask.status = 'finished'
-
+    if type == "pull":
+        repo.pull(asked_path)
     else:
-        self.update_state(state='PROGRESS')
-        dbtask.status = 'failed'
+        repo.freeze(asked_path)
+
+    self.update_state(state='PROGRESS')
+    dbtask.status = 'finished'
 
     dbtask.finished = datetime.utcnow()
     db.session.commit()
 
     if email:
-        if wait_for_failed:
-            msg = Message(subject="Failed to %s" % (type),
-                          body="Failed to %s %s" % (type, path),  # TODO [LOW] better text
-                          sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                          recipients=[email])
-        else:
-            msg = Message(subject="Finished %s" % (vocab[type]),
-                          body="Finished %s %s" % (type, path),  # TODO [LOW] better text
-                          sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                          recipients=[email])
+        msg = Message(subject="Finished %s" % (vocab[type]),
+                      body="Finished %s %s" % (type, path),  # TODO [LOW] better text
+                      sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
+                      recipients=[email])
         mail.send(msg)
 
 

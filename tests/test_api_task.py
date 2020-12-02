@@ -14,8 +14,7 @@ class TestApiTask(BaricadrTestCase):
         response = client.get('/tasks/status/foobar')
 
         # TODO maybe we should send a 404 error, but celery can't say if the task is finished or doesn't exist
-        assert response.json['task'] == {'finished': 'false', 'error': 'false', 'info': None}
-        assert response.status_code == 200
+        assert response.status_code == 404
 
     def test_delete_unknown(self, client):
         """
@@ -23,7 +22,7 @@ class TestApiTask(BaricadrTestCase):
         """
         response = client.get('/tasks/remove/foobar')
         assert response.json['error'] == "Task not found in Baricadr database."
-        assert response.status_code == 200
+        assert response.status_code == 404
 
     def test_delete_task(self, client):
         """
