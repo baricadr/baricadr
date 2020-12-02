@@ -13,7 +13,6 @@ class TestApiTask(BaricadrTestCase):
         """
         response = client.get('/tasks/status/foobar')
 
-        # TODO maybe we should send a 404 error, but celery can't say if the task is finished or doesn't exist
         assert response.status_code == 404
 
     def test_delete_unknown(self, client):
