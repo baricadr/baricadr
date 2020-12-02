@@ -196,7 +196,7 @@ def kill_task(task_id):
 
         db.session.delete(db_task)
         db.session.commit()
-        status['info'] = "Task %s removed" % (task_id)
+        status['info'] = "Task %s removed." % (task_id)
 
     else:
         status['error'] = 'Task not found in Baricadr database.'
