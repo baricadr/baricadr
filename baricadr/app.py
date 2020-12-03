@@ -76,8 +76,10 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         error_pages(app)
         gvars(app)
 
-        # Should it be on the worker?
-        if app.is_worker:
+        # Need to be outside the if, else the worker does not have access to the value
+        app.config['CLEANUP_AGE'] = _get_int_value(app.config.get('CLEANUP_AGE'), 0)
+        # Moved to not worker, else duplicate tasks (?)
+        if not app.is_worker:
             scheduler = APScheduler()
             scheduler.init_app(app)
             scheduler.start()

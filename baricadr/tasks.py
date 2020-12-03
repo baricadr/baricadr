@@ -146,7 +146,8 @@ def cleanup_tasks(self):
         Cleanup finished and failed tasks
     """
 
-    finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]))
+    max_date = datetime.utcnow() - timedelta(seconds=app.config['CLEANUP_AGE'])
+    finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]), BaricadrTask.finished < max_date)
 
     num = 0
     for ft in finished_tasks:
