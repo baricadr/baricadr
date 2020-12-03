@@ -46,10 +46,10 @@ class Repo():
                 try:
                     conf['freeze_age'] = int(conf['freeze_age'])
                 except ValueError:
-                    raise ValueError("Malformed repository definition, freeze_age must be an integer in '%s'" % conf)
+                    raise ValueError("Malformed repository definition, freeze_age must be an integer in days in '%s'" % conf)
 
                 if conf['freeze_age'] < 2 or conf['freeze_age'] > 10000:
-                    raise ValueError("Malformed repository definition, freeze_age must be an integer >1 and <10000 in '%s'" % conf)
+                    raise ValueError("Malformed repository definition, freeze_age must be an integer in days >1 and <10000 in '%s'" % conf)
 
                 self.freeze_age = conf['freeze_age']
 
@@ -61,10 +61,10 @@ class Repo():
                     try:
                         conf['auto_freeze_interval'] = int(conf['auto_freeze_interval'])
                     except ValueError:
-                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer in '%s'" % conf)
+                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer in days in '%s'" % conf)
 
                     if conf['auto_freeze_interval'] < 2 or conf['auto_freeze_interval'] > 10000:
-                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer >1 and <10000 in '%s'" % conf)
+                        raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer in days >1 and <10000 in '%s'" % conf)
 
                 self.auto_freeze_interval = conf['auto_freeze_interval']
 
