@@ -228,6 +228,8 @@ def cleanup_zombies(app):
 
 
 def _get_int_value(config_val, default):
+    if not config_val:
+        config_val = default
     try:
         config_val = int(config_val)
     except ValueError:
