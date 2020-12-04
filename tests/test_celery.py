@@ -13,7 +13,7 @@ class TestCelery(BaricadrTestCase):
 
     def teardown_method(self):
         if self.task_ids:
-            for task in BaricadrTask.query.filter(BaricadrTestCase.task_id.in_(self.task_ids)):
+            for task in BaricadrTask.query.filter(BaricadrTask.task_id.in_(self.task_ids)):
                 db.session.delete(task)
                 db.session.commit()
 
