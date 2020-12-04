@@ -34,7 +34,7 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
     db.session.commit()
 
 
-def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
+def manage_repo(self, type, path, task_id, email=None, wait_for=[], sleep=0):
 
     # Wait a bit in case the tasks begin just before it is recorded in the db
     time.sleep(2)
@@ -44,6 +44,9 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
     db.session.commit()
 
     vocab = {'pull': 'pulling', 'freeze': 'freezing'}
+
+    # For internal testing, cannot be set by api
+    time.sleep(sleep)
 
     if wait_for:
         app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
@@ -89,24 +92,23 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[]):
 
 # Maybe fuse the tasks also?
 @celery.task(bind=True, name="pull", on_failure=on_failure)
-def pull(self, path, email=None, wait_for=[]):
-    manage_repo(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for)
+def pull(self, path, email=None, wait_for=[], sleep=0):
+    manage_repo(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, sleep=sleep)
 
 
 @celery.task(bind=True, name="freeze", on_failure=on_failure)
-def freeze(self, path, email=None, wait_for=[]):
-    manage_repo(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for)
+def freeze(self, path, email=None, wait_for=[], sleep=0):
+    manage_repo(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, sleep=sleep)
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
-def cleanup_zombie_tasks(self):
+def cleanup_zombie_tasks(self, max_task_duration):
     """
     Look at the list of tasks in the database and check if they are running or in queue.
     If for some reason a task is in the db but not running/in queue, it means that it is finished or that it got interrupted.
     """
 
-    max_delay = app.config['MAX_TASK_DURATION']
-    max_date = datetime.utcnow() - timedelta(seconds=max_delay)
+    max_date = datetime.utcnow() - timedelta(seconds=max_task_duration)
 
     self.update_state(state='PROGRESS')
 
@@ -118,17 +120,21 @@ def cleanup_zombie_tasks(self):
         if rt.status in ['started', 'pulling', 'freezing']:
             app.logger.debug("Checking zombie for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
             AsyncResult(rt.task_id).revoke(terminate=True)
+            # Actually set status here and not in signal so we can test it...
+            rt.status = 'failed'
+            rt.finished = datetime.utcnow()
             num += 1
+        db.session.commit()
     app.logger.debug("%s zombie tasks killed (%s remaining)" % (num, running_tasks.count() - num))
 
 
 @celery.task(bind=True, name="cleanup_tasks")
-def cleanup_tasks(self):
+def cleanup_tasks(self, cleanup_age):
     """
         Cleanup finished and failed tasks
     """
 
-    max_date = datetime.utcnow() - timedelta(seconds=app.config['CLEANUP_AGE'])
+    max_date = datetime.utcnow() - timedelta(seconds=cleanup_age)
     finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]), BaricadrTask.finished < max_date)
 
     num = 0
@@ -149,20 +155,15 @@ def on_task_revoked(**kwargs):
     if str(kwargs['signum']) == 'Signals.SIGTERM':
 
         request = kwargs['request']
-        dbtask = BaricadrTask.query.filter_by(task_id=request.id).one()
-
+        path = request.args[0]
         email = request.args[1]
 
         if email:
-            msg = Message(subject="Failed to %s" % (dbtask.type),
-                          body="Failed to %s %s, task was removed after being stuck" % (dbtask.type, dbtask.path),  # TODO [LOW] better text
+            msg = Message(subject="Failed to %s" % (request.task),
+                          body="Failed to %s %s, task was removed after expiring" % (request.task, path),  # TODO [LOW] better text
                           sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
                           recipients=email)
             mail.send(msg)
-
-        dbtask.status = 'failed'
-        dbtask.finished = datetime.utcnow()
-        db.session.commit()
 
 
 @task_postrun.connect

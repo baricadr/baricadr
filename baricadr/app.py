@@ -220,11 +220,11 @@ def freeze_repo(app, repo_path):
 
 
 def cleanup(app):
-    app.celery.send_task('cleanup_tasks')
+    app.celery.send_task('cleanup_tasks', (app.config['CLEANUP_AGE'],))
 
 
 def cleanup_zombies(app):
-    app.celery.send_task('cleanup_zombie_tasks')
+    app.celery.send_task('cleanup_zombie_tasks', (app.config['MAX_TASK_DURATION'],))
 
 
 def _get_int_value(config_val, default):

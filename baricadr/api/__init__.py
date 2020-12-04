@@ -183,7 +183,7 @@ def task_show(task_id):
 @api.route('/zombie', methods=['GET'])
 def zombie():
     current_app.logger.info("API call: Killing zombies")
-    task = current_app.celery.send_task('cleanup_zombie_tasks')
+    task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
     task_id = task.task_id
     return jsonify({'task': task_id})
 
