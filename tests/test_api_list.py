@@ -57,6 +57,42 @@ class TestApiList(BaricadrTestCase):
 
         assert remote_file_list == ["file2.txt"]
 
+    def test_list_full(self, client):
+        """
+            Get files with full info
+        """
+        body = {"path": "/repos/test_repo/", 'full': True}
+        response = client.post("/list", json=body)
+
+        assert response.status_code == 200
+        assert len(response.json) == 2
+
+        # Not checking mtime since we do not know what to expect
+        expected = [
+            {
+                "IsDir": False,
+                "MimeType": "text/plain; charset=utf-8",
+                "Name": "file.txt",
+                "Path": "file.txt",
+                "Size": 13
+            },
+            {
+                "IsDir": False,
+                "MimeType": "text/plain; charset=utf-8",
+                "Name": "file2.txt",
+                "Path": "file2.txt",
+                "Size": 8
+            }
+        ]
+
+        keys = ["IsDir", "MimeType", "ModTime", "Name", "Size", "Path"]
+        for file in response.json:
+            assert all(key in file for key in keys)
+            file.pop('ModTime', None)
+
+        assert sorted(expected, key=lambda k: k['Path']) == sorted(response.json, key=lambda k: k['Path'])
+
+
 # TODO [LOW] test checksum
 # TODO [LOW] document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
 # TODO [LOW] readthedocs for cli
