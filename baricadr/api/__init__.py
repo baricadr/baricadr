@@ -168,7 +168,7 @@ def task_show(task_id):
 
 
 @api.route('/tasks/remove/<task_id>', methods=['GET'])
-def kill_task(task_id):
+def remove_task(task_id):
     current_app.logger.info("API call: Killing task %s" % task_id)
     status = {
         'info': "",
