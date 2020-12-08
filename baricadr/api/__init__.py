@@ -118,7 +118,7 @@ def __pull_or_freeze(action, request):
 
 
 @api.route('/tasks', methods=['GET'])
-def tasks():
+def task_list():
     current_app.logger.info("API call: Getting list of tasks")
 
     tasks_json = []
