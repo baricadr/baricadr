@@ -67,7 +67,7 @@ class TestApiPull(BaricadrTestCase):
 
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/status/%s' % pull_id)
@@ -106,7 +106,7 @@ class TestApiPull(BaricadrTestCase):
 
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/status/%s' % pull_id)
@@ -367,7 +367,7 @@ class TestApiPull(BaricadrTestCase):
     def wait_for_pull(self, client, pull_id):
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/status/%s' % pull_id)

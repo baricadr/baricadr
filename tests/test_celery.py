@@ -8,9 +8,12 @@ from . import BaricadrTestCase
 
 class TestCelery(BaricadrTestCase):
 
+    def setup_method(self):
+        self.task_ids = []
+
     def teardown_method(self):
-        if self.current_task_id:
-            for task in BaricadrTask.query.filter_by(task_id=self.current_task_id):
+        if self.task_ids:
+            for task in BaricadrTask.query.filter(BaricadrTask.task_id.in_(self.task_ids)):
                 db.session.delete(task)
                 db.session.commit()
 
@@ -20,7 +23,7 @@ class TestCelery(BaricadrTestCase):
 
         task = app.celery.send_task('pull', (path, None, [None]))
         task_id = task.task_id
-        self.current_task_id = task_id
+        self.task_ids.append(task_id)
         # Save a reference to this task in db
         pt = BaricadrTask(path=path, type="pull", task_id=task_id)
         db.session.add(pt)

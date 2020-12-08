@@ -169,8 +169,9 @@ def task_show(task_id):
     if isinstance(info, Exception):
         error = 'true'
         info = str(info)
+        # info will be empty if not Exception (none of our tasks have a return value)
+        current_app.logger.debug("Task state from Celery: %s" % res.info)
 
-    current_app.logger.debug("Task state from Celery: %s" % res.info)
     status['task'] = {
         'finished': str(res.ready()).lower(),
         'error': error,
@@ -182,7 +183,7 @@ def task_show(task_id):
 @api.route('/zombie', methods=['GET'])
 def zombie():
     current_app.logger.info("API call: Killing zombies")
-    task = current_app.celery.send_task('cleanup_zombie_tasks')
+    task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
     task_id = task.task_id
     return jsonify({'task': task_id})
 
