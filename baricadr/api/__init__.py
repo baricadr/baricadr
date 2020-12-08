@@ -53,9 +53,13 @@ def list():
 
     missing = False
     from_root = False
+    full = False
 
     if 'missing' in request.json and str(request.json['missing']).lower() == "true":
         missing = True
+
+    if 'full' in request.json and str(request.json['full']).lower() == "true":
+        full = True
 
     max_depth = 1
     if 'max_depth' in request.json:
@@ -66,7 +70,7 @@ def list():
 
     asked_path = os.path.abspath(request.json['path'])
     repo = current_app.repos.get_repo(asked_path)
-    files = repo.remote_list(asked_path, missing=missing, max_depth=max_depth, from_root=from_root)
+    files = repo.remote_list(asked_path, missing=missing, max_depth=max_depth, from_root=from_root, full=full)
 
     return jsonify(files)
 
@@ -192,6 +196,6 @@ def kill_task(task_id):
 @api.route('/zombie', methods=['GET'])
 def zombie():
     current_app.logger.info("API call: Killing zombies")
-    task = current_app.celery.send_task('cleanup_zombie_tasks')
+    task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
     task_id = task.task_id
     return jsonify({'task': task_id})

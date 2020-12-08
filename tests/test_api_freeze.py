@@ -166,7 +166,7 @@ class TestApiFreeze(BaricadrTestCase):
 
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/tasks/status/%s' % freeze_id)
@@ -219,7 +219,7 @@ class TestApiFreeze(BaricadrTestCase):
 
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/tasks/status/%s' % freeze_id)
@@ -521,7 +521,7 @@ class TestApiFreeze(BaricadrTestCase):
     def wait_for_freeze(self, client, freeze_id):
         # Wait for the task to run
         wait = 0
-        while wait < 10:
+        while wait < 30:
             sleep(2)
 
             response = client.get('/tasks/status/%s' % freeze_id)

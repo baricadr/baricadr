@@ -25,7 +25,7 @@
     user: foo
     password: pass
     freezable: True
-    auto_freeze: True
+    auto_freeze: False
     auto_freeze_interval: 14
 
 /repos/test_repo_freeze_disabled/:
