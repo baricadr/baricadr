@@ -14,6 +14,7 @@ class BaricadrTask(db.Model):
     created = db.Column(db.DateTime(), nullable=False, default=datetime.utcnow)
     started = db.Column(db.DateTime())
     finished = db.Column(db.DateTime())
+    error = db.Column(db.Text())
 
     def __repr__(self):
         return '<BaricadrTask {} {} {} {}>'.format(self.type, self.path, self.task_id, self.status)

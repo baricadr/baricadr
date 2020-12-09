@@ -169,17 +169,18 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
@@ -221,17 +222,18 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
@@ -522,17 +524,18 @@ class TestApiFreeze(BaricadrTestCase):
         while wait < 30:
             sleep(2)
 
-            response = client.get('/status/%s' % freeze_id)
+            response = client.get('/tasks/status/%s' % freeze_id)
 
             assert response.status_code == 200
 
-            if response.json['task']['finished'] == "true":
+            if response.json['status'] == "finished":
                 break
             else:
-                assert response.json['task']['error'] == 'false'
+                assert not response.json['error']
             wait += 1
 
-        assert response.json['task'] == {'finished': 'true', 'error': 'false', 'info': None}
+        assert response.json['status'] == "finished"
+        assert not response.json['error']
 
     def freeze_and_wait(self, client, path):
 

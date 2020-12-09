@@ -21,6 +21,7 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
 
     app.logger.warning("Task %s failed. Exception raised : %s" % (task_id, str(exc)))
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
+    dbtask.error = str(exc)
 
     if "email" in kwargs and kwargs['email']:
         msg = Message(subject="Failed to %s" % (dbtask.type),
@@ -59,7 +60,6 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[], sleep=0):
                     break
                 time.sleep(1)
                 tries += 1
-        # Reset the "started" time now, to avoid killing the task with the zombie killer after waiting
         dbtask.started = datetime.utcnow()
 
     dbtask.status = vocab[type]

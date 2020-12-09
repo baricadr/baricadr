@@ -7,7 +7,7 @@ from celery.result import AsyncResult
 
 from email_validator import EmailNotValidError, validate_email
 
-from flask import (Blueprint, current_app, jsonify, request)
+from flask import (Blueprint, current_app, jsonify, make_response, request)
 
 
 api = Blueprint('api', __name__, url_prefix='/')
@@ -53,9 +53,13 @@ def list():
 
     missing = False
     from_root = False
+    full = False
 
     if 'missing' in request.json and str(request.json['missing']).lower() == "true":
         missing = True
+
+    if 'full' in request.json and str(request.json['full']).lower() == "true":
+        full = True
 
     max_depth = 1
     if 'max_depth' in request.json:
@@ -66,7 +70,7 @@ def list():
 
     asked_path = os.path.abspath(request.json['path'])
     repo = current_app.repos.get_repo(asked_path)
-    files = repo.remote_list(asked_path, missing=missing, max_depth=max_depth, from_root=from_root)
+    files = repo.remote_list(asked_path, missing=missing, max_depth=max_depth, from_root=from_root, full=full)
 
     return jsonify(files)
 
@@ -114,7 +118,7 @@ def __pull_or_freeze(action, request):
 
 
 @api.route('/tasks', methods=['GET'])
-def tasks():
+def task_list():
     current_app.logger.info("API call: Getting list of tasks")
 
     tasks_json = []
@@ -134,7 +138,7 @@ def tasks():
     return jsonify(tasks_json)
 
 
-@api.route('/status/<task_id>', methods=['GET'])
+@api.route('/tasks/status/<task_id>', methods=['GET'])
 def task_show(task_id):
     current_app.logger.info("API call: Getting status of task %s" % task_id)
 
@@ -151,33 +155,42 @@ def task_show(task_id):
             'status': db_task.status,
             'created': db_task.created,
             'started': db_task.started,
-            'finished': db_task.finished
+            'finished': db_task.finished,
+            'error': db_task.error
         }
+        code = 200
     else:
-        status = {
-            'error': 'Task not found in Baricadr database. Maybe it is too old.'
-        }
+        status = {'error': 'Task not found in Baricadr database. Maybe it is too old.'}
+        code = 404
 
     current_app.logger.debug("Task state from database: %s" % status)
+    return make_response(jsonify(status), code)
 
-    # Get status from celery (if still there)
-    res = AsyncResult(task_id)
-    info = res.info
-    error = 'false'
 
-    # Make exceptions readable
-    if isinstance(info, Exception):
-        error = 'true'
-        info = str(info)
-        # info will be empty if not Exception (none of our tasks have a return value)
-        current_app.logger.debug("Task state from Celery: %s" % res.info)
-
-    status['task'] = {
-        'finished': str(res.ready()).lower(),
-        'error': error,
-        'info': info
+@api.route('/tasks/remove/<task_id>', methods=['GET'])
+def task_remove(task_id):
+    current_app.logger.info("API call: Killing task %s" % task_id)
+    status = {
+        'info': "",
+        'error': ""
     }
-    return jsonify(status)
+    # Get task from DB
+    db_task = BaricadrTask.query.filter_by(task_id=task_id)
+    if db_task.count():
+        db_task = db_task.one()
+        if db_task.status in ['started', 'waiting']:
+            AsyncResult(task_id).revoke(terminate=True)
+
+        db.session.delete(db_task)
+        db.session.commit()
+        status['info'] = "Task %s removed." % (task_id)
+        code = 200
+
+    else:
+        status['error'] = 'Task not found in Baricadr database.'
+        code = 404
+
+    return make_response(jsonify(status), code)
 
 
 @api.route('/zombie', methods=['GET'])
@@ -186,5 +199,3 @@ def zombie():
     task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
     task_id = task.task_id
     return jsonify({'task': task_id})
-
-# TODO [HI] add method to kill a task
