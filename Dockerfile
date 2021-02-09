@@ -17,7 +17,7 @@ RUN apk add --no-cache \
     at \
     postgresql-client \
     tzdata \
-    wget curl unzip man man-pages mdocml-apropos && \
+    wget curl unzip && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
     pip3 install --upgrade pip setuptools && \
