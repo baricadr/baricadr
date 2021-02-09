@@ -1,5 +1,7 @@
 import os
 
+from baricadr.utils import get_celery_worker_status
+
 from celery import Celery
 
 from flask import Flask, g, render_template
@@ -208,6 +210,12 @@ def setup_freeze_tasks(app, scheduler):
 
 
 def freeze_repo(app, repo_path):
+
+    celery_status = get_celery_worker_status(app.celery)
+    if celery_status['availability'] is None:
+        app.logger.error("trygin to schedule an auto freeze task on repo '%s', but no Celery worker available to process the request. Aborting.", repo_path)
+        return
+
     touching_task_id = app.repos.is_already_touching(repo_path)
     if not touching_task_id:
         locking_task_id = app.repos.is_locked_by_subdir(repo_path)

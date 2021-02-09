@@ -1,5 +1,6 @@
 import os
 
+from baricadr.utils import get_celery_worker_status
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db
 
@@ -85,6 +86,11 @@ def __pull_or_freeze(action, request):
 
     # Normalize path
     asked_path = os.path.abspath(request.json['path'])
+
+    celery_status = get_celery_worker_status(current_app.celery)
+    if celery_status['availability'] is None:
+        current_app.logger.error("Received '%s' action on path '%s', but no Celery worker available to process the request. Aborting." % (action, asked_path))
+        return jsonify({'error': 'No Celery worker to process the request'}), 400
 
     email = None
     if 'email' in request.json:
@@ -196,6 +202,12 @@ def task_remove(task_id):
 @api.route('/zombie', methods=['GET'])
 def zombie():
     current_app.logger.info("API call: Killing zombies")
+
+    celery_status = get_celery_worker_status(current_app.celery)
+    if celery_status['availability'] is None:
+        current_app.logger.error("Received 'zombie' action, but no Celery worker available to process the request. Aborting.")
+        return jsonify({'error': 'No Celery worker to process the request'}), 400
+
     task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
     task_id = task.task_id
     return jsonify({'task': task_id})
