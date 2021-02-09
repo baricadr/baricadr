@@ -202,6 +202,7 @@ class SftpBackend(RcloneBackend):
         self.remote_host = url_split[0]
         self.remote_prefix = os.path.join(url_split[1], '')
 
+    # TODO [HI] pull permissions too, of make the default configurable
     def pull(self, repo, path):
         obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = self.temp_rclone_config()
