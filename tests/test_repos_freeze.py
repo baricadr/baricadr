@@ -15,7 +15,7 @@ class TestReposFreeze(BaricadrTestCase):
     def setup_method(self):
         if os.path.exists(self.testing_repo):
             shutil.rmtree(self.testing_repo)
-        shutil.copytree(self.template_repo, self.testing_repo)
+        shutil.copytree(self.template_repo, self.testing_repo, symlinks=True, ignore_dangling_symlinks=True)
 
     def teardown_method(self):
         if os.path.exists(self.testing_repo):
