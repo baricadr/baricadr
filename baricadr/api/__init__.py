@@ -1,8 +1,8 @@
 import os
 
-from baricadr.utils import get_celery_worker_status
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db
+from baricadr.utils import get_celery_worker_status
 
 from celery.result import AsyncResult
 
