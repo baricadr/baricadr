@@ -14,7 +14,7 @@ It is a prototype and not yet ready for production.
 
 It was originally designed for the BBRIC/BARIC CATI at INRA, with the AgroDataRing project.
 
-# Running it with Docker
+## Running it with Docker
 
 ```
 docker-compose build
@@ -25,7 +25,7 @@ Monitor tasks at http://localhost:5555/
 
 See emails at http://localhost:8025/
 
-# Running tests
+## Running tests
 
 Run the app with docker-compose, then run this:
 
@@ -46,23 +46,28 @@ docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends
 docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends.py -k test_remote_list_sftp
 ```
 
-# Using it
+## Usage
 
 The best way to use Baricadr is to use the corresponding [python module](https://github.com/baricadr/baricadr_cli) which provides a simple CLI and a python interface.
 
+Baricadr can perform 2 main actions to files:
+
+* Pulling: Baricadr will download some files from the remote source to have them in the local copy
+* Freezing: Baricadr will delete local files if they have not been accessed recently, and they are available on the remote source
+
 If you prefer to use it using curl, you can do the following:
 
-## Triggering a "pull"
+### Triggering a "pull"
 
 `curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/some/local/path/test.gz"}'`
 
-## Checking the status
+### Checking the status
 
 `curl  -H "Content-type: application/json" -X GET http://localhost:9100/status/<pull-id>`
 
 With pull-id = the return of the pull POST call above
 
-# What will it do to my data?
+## What will it do to my data?
 
 Baricadr will never touch remote data.
 
@@ -76,7 +81,7 @@ When pulling, it will try to respect as much as possible the local data compared
 
 We consider that if a local file was modified, it will end up being propagated to the remote during the next backup.
 
-# Configuring
+## Configuring
 
 There are 3 run mode for baricadr: `dev`, `test` and `prod`.
 
@@ -102,12 +107,15 @@ You should write a yaml file containing the list of repositories managed by Bari
     user: someone
     password: xxxxx
     exclude: *xml
-    freeze_age: 365   # By default baricadr will "freeze" files older than 180 days (6 months). You can change this limit with this parameter.
+    freezable: True  # Set this to True to allow Baricadr to freeze files (default: False)
+    freeze_age: 365   # By default Baricadr will "freeze" files older than 180 days (6 months). You can change this limit with this parameter.
+    auto_freeze: True  # Set this to True to schedule regular automated freeze tasks on the whole repo content (default: False)
+    auto_freeze_interval: 7  # Delay (in days) between each regular automated freeze task (ignored if auto_freeze is False)
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file
 
-# Database
+## Database
 
 Baricadr uses a small SQL database to store some information.
 It uses Flask-migrate to automatically create/update databases. If you modify the models (in `baricadr/db_models.py`), you will need to run the following commands:
