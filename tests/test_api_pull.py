@@ -48,6 +48,11 @@ class TestApiPull(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
         assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
+        # Check symlinks
+        assert os.path.exists(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.path.islink(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == repo_dir + '/poutrelle.tsv'
+
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 

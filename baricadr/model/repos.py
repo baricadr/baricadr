@@ -227,7 +227,7 @@ class Repo():
         tz = get_localzone()
 
         last_modif_remote = dateutil.parser.isoparse(remote_file['ModTime'])
-        last_modif_local = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_mtime, tz=tz)
+        last_modif_local = datetime.datetime.fromtimestamp(os.lstat(file_to_check).st_mtime, tz=tz)
 
         current_app.logger.info("Checking if we should freeze '%s': local modification on '%s' , remote modification on '%s' => Delta is %s seconds" % (file_to_check, last_modif_local, last_modif_remote, (last_modif_local - last_modif_remote).total_seconds()))
 
@@ -240,7 +240,7 @@ class Repo():
             current_app.logger.info("Checking if we should freeze '%s' => force is set to True, freezing" % (file_to_check))
             return True
 
-        last_access = datetime.datetime.fromtimestamp(os.stat(file_to_check).st_atime).date()
+        last_access = datetime.datetime.fromtimestamp(os.lstat(file_to_check).st_atime).date()
         now = datetime.date.today()
         delta = now - last_access
         delta = delta.days

@@ -20,7 +20,7 @@ class TestApiFreeze(BaricadrTestCase):
         for repo in self.testing_repos:
             if os.path.exists(repo):
                 shutil.rmtree(repo)
-            shutil.copytree(self.template_repo, repo)
+            shutil.copytree(self.template_repo, repo, symlinks=True, ignore_dangling_symlinks=True)
 
     def teardown_method(self):
         for repo in self.testing_repos:
