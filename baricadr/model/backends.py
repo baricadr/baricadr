@@ -74,7 +74,7 @@ class RcloneBackend(Backend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't obscurify password (stderr: " + str(err) + ")")
+            raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't obscurify password (stderr: " + str(err) + ")")
 
         return obscure_password
 
@@ -121,7 +121,7 @@ class RcloneBackend(Backend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
+            raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
 
         current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
 
@@ -232,7 +232,7 @@ class SftpBackend(RcloneBackend):
         if retcode != 0:
             current_app.logger.error(output)
             current_app.logger.error(err)
-            raise RuntimeError("Child was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
+            raise RuntimeError("Rclone cmd was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
         tempRcloneConfig.close()
 
         # Touch all files to set atime to now (but not mtime)
