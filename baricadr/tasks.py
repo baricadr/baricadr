@@ -35,7 +35,7 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
     db.session.commit()
 
 
-def manage_repo(self, type, path, task_id, email=None, wait_for=[], sleep=0):
+def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0):
 
     # Wait a bit in case the tasks begin just before it is recorded in the db
     time.sleep(2)
@@ -93,12 +93,12 @@ def manage_repo(self, type, path, task_id, email=None, wait_for=[], sleep=0):
 # Maybe fuse the tasks also?
 @celery.task(bind=True, name="pull", on_failure=on_failure)
 def pull(self, path, email=None, wait_for=[], sleep=0):
-    manage_repo(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, sleep=sleep)
+    run_repo_action(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, sleep=sleep)
 
 
 @celery.task(bind=True, name="freeze", on_failure=on_failure)
 def freeze(self, path, email=None, wait_for=[], sleep=0):
-    manage_repo(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, sleep=sleep)
+    run_repo_action(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, sleep=sleep)
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
@@ -131,7 +131,7 @@ def cleanup_zombie_tasks(self, max_task_duration):
 @celery.task(bind=True, name="cleanup_tasks")
 def cleanup_tasks(self, cleanup_age):
     """
-        Cleanup finished and failed tasks
+        Cleanup finished and failed tasks from db
     """
 
     max_date = datetime.utcnow() - timedelta(seconds=cleanup_age)
