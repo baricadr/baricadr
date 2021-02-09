@@ -324,10 +324,11 @@ class TestReposFreeze(BaricadrTestCase):
         # Copy a local-only file in local repo
         copied_file = self.testing_repo + '/subdir/subfile.txt'
         local_file = self.testing_repo + '/subdir/local_new_file.txt'
-        old_time = os.stat(copied_file).st_atime - (500 * 3600)
         shutil.copyfile(copied_file, local_file)
-        os.utime(copied_file, (old_time, old_time))
-        os.utime(local_file, (old_time, old_time))
+
+        self.set_old_atime(copied_file, age=3600 * 500, recursive=False)
+        self.set_old_atime(local_file, age=3600 * 500, recursive=False)
+
         assert os.path.exists(local_file)
 
         with pytest.raises(RuntimeError):

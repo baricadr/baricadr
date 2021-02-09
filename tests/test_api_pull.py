@@ -280,7 +280,7 @@ class TestApiPull(BaricadrTestCase):
 
     def test_pull_local_old(self, app, client):
         """
-        Try to pull a dir containing some locally deleted data
+        Try to pull a dir containing some file modified locally a long time ago
         """
 
         repo_dir = '/repos/test_repo/subdir'
@@ -296,8 +296,7 @@ class TestApiPull(BaricadrTestCase):
         with open(repo_dir + '/subfile.txt', 'w') as local_file:
             local_file.write('This was touched locally\n')
 
-        new_time = os.stat(repo_dir + '/subfile.txt').st_mtime - 100000000
-        os.utime(repo_dir + '/subfile.txt', (new_time, new_time))
+        self.set_old_atime(repo_dir + '/subfile.txt', age=3600 * 30000, recursive=False)
 
         # Try to pull a dir already pulled just before
         self.pull_and_wait(client, repo_dir)

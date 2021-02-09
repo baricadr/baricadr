@@ -1,5 +1,4 @@
 # Requirements for the Flask webapp
-# TODO: Fix versions
 # base
 Flask
 Flask-Mail
