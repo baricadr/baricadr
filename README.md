@@ -46,6 +46,24 @@ docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends
 docker-compose exec baricadr pytest -v --log-cli-level debug tests/test_backends.py -k test_remote_list_sftp
 ```
 
+### Running tests on a partition that does not support atime
+
+If you want to run tests on a partition that does not support atime (e.g. mounted with noatime option), you can use a fake ext4 partition supporting atime like this:
+
+```
+dd if=/dev/zero of=test-data/test-fs bs=1000 count=1000
+mkfs.ext4 test-data/test-fs
+sudo mount -o strictatime test-data/test-fs test-data/test-fs-mountpoint
+docker-compose -f docker-compose.local-fs.yml up -d
+```
+
+When you are done, clean it and unmount it like this:
+
+```
+sudo rm -rf test-data/test-fs-mountpoint/*
+sudo umount /home/abretaud/git/baricadr/test-data/test-fs-mountpoint
+```
+
 ## Usage
 
 The best way to use Baricadr is to use the corresponding [python module](https://github.com/baricadr/baricadr_cli) which provides a simple CLI and a python interface.

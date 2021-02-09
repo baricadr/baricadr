@@ -56,3 +56,6 @@ docs/_build
 .pytest_cache
 
 supervisord.pid
+
+test-data/test-fs
+test-data/test-fs-mountpoint
