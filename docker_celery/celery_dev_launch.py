@@ -4,8 +4,6 @@ A python script which starts celery worker and auto reload it when any code chan
 I did this because Celery worker's "--autoreload" option seems not working for a lot of people.
 '''
 
-# FIXME not really working: if the application fails to start (saved invalid python code), it will never be reloaded
-
 import os
 import subprocess
 import time
@@ -36,15 +34,16 @@ class MyHandler(PatternMatchingEventHandler):
             if not is_celery_worker:
                 continue
 
+            pscwd = proc.cwd()
             proc.kill()
-            print("Just killed {} on working dir {}".format(proc_cmdline, proc.cwd()))
+            print("Just killed {} on working dir {}".format(proc_cmdline, pscwd))
 
         run_worker()
 
     def _get_proc_cmdline(self, proc):
         try:
             return proc.cmdline()
-        except Exception as e:
+        except Exception:
             return []
 
 
