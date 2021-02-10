@@ -66,7 +66,7 @@ class RcloneBackend(Backend):
         Generate obscure password to connect to distant server
         """
         cmd = "rclone obscure '%s'" % clear_pass
-        current_app.logger.info(cmd)
+        current_app.logger.info("rclone obscure ###############")
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
