@@ -64,6 +64,7 @@ services:
         command: foo:pass:1001
         volumes:
             - ./test-data/test-repo/:/home/foo/test-repo/:ro
+            - ./test-data/test-repo-sftp/:/home/foo/test-repo-sftp/:ro
 
     db:
         image: postgres:11-alpine

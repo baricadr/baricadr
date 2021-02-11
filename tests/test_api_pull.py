@@ -48,10 +48,132 @@ class TestApiPull(BaricadrTestCase):
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
         assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
 
-        # Check symlinks
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_rclone_symlinks(self, app, client):
+        """
+        Try to pull a dir containing symlinks in rclone format
+        """
+
+        repo_dir = '/repos/test_repo_sftp/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        # Check relative symlinks
         assert os.path.exists(repo_dir + '/subsubdir/relative_symlink.tsv')
         assert os.path.islink(repo_dir + '/subsubdir/relative_symlink.tsv')
-        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == repo_dir + '/poutrelle.tsv'
+        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == 'poutrelle.tsv'
+
+        # Check absolute, dangling symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/absolute_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/absolute_symlink.tsv') == '/tmp/something.tsv'
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_rclone_symlinks_existing_same(self, app, client):
+        """
+        Try to pull a dir containing symlinks in rclone format, with a preexisting symlink
+        """
+
+        repo_dir = '/repos/test_repo_sftp/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        os.makedirs(repo_dir + '/subsubdir/')
+        os.symlink('poutrelle.tsv', repo_dir + '/subsubdir/relative_symlink.tsv')
+        os.symlink('/tmp/something.tsv', repo_dir + '/subsubdir/absolute_symlink.tsv')
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        # Check relative symlinks
+        assert os.path.exists(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.path.islink(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == 'poutrelle.tsv'
+
+        # Check absolute, dangling symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/absolute_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/absolute_symlink.tsv') == '/tmp/something.tsv'
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_rclone_symlinks_existing_diff(self, app, client):
+        """
+        Try to pull a dir containing symlinks in rclone format, with a preexisting different symlink
+        """
+
+        repo_dir = '/repos/test_repo_sftp/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        os.makedirs(repo_dir + '/subsubdir/')
+        os.symlink('poutrellexx.tsv', repo_dir + '/subsubdir/relative_symlink.tsv')
+        os.symlink('/tmp/somethingxx.tsv', repo_dir + '/subsubdir/absolute_symlink.tsv')
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        # Check relative symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == 'poutrellexx.tsv'
+
+        # Check absolute, dangling symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/absolute_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/absolute_symlink.tsv') == '/tmp/somethingxx.tsv'
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_rclone_symlinks_existing_file(self, app, client):
+        """
+        Try to pull a dir containing symlinks in rclone format, with a preexisting file instead of symlink
+
+        In this case rclone will replace local files with remote symlinks.
+        """
+
+        repo_dir = '/repos/test_repo_sftp/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        os.makedirs(repo_dir + '/subsubdir/')
+
+        with open(repo_dir + '/subsubdir/relative_symlink.tsv', 'w') as local_file:
+            local_file.write('This was touched locally\n')
+        with open(repo_dir + '/subsubdir/absolute_symlink.tsv', 'w') as local_file:
+            local_file.write('This was touched locally\n')
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        # Check relative symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/relative_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/relative_symlink.tsv') == 'poutrelle.tsv'
+
+        # Check absolute, dangling symlinks
+        assert os.path.islink(repo_dir + '/subsubdir/absolute_symlink.tsv')
+        assert os.readlink(repo_dir + '/subsubdir/absolute_symlink.tsv') == '/tmp/something.tsv'
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)

@@ -99,6 +99,8 @@ When pulling, it will try to respect as much as possible the local data compared
 
 We consider that if a local file was modified, it will end up being propagated to the remote during the next backup.
 
+Symlinks are supported as long as they were created on the remote using rclone `--links`.
+
 ## Configuring
 
 There are 3 run mode for baricadr: `dev`, `test` and `prod`.

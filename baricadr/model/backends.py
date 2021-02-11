@@ -56,7 +56,6 @@ class Backend():
         raise NotImplementedError()
 
 
-# TODO [HI] check that we support symlinks now (https://github.com/ncw/rclone/issues/1152)
 class RcloneBackend(Backend):
     def __init__(self, conf):
         Backend.__init__(self, conf)
@@ -223,7 +222,7 @@ class SftpBackend(RcloneBackend):
                 ex_options += " --exclude '%s'" % ex.strip()
 
         # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
-        cmd = "rclone %s --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
+        cmd = "rclone %s --links --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
         current_app.logger.debug("Running command: %s" % cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()

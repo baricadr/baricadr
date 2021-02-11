@@ -19,6 +19,14 @@
     password: pass
     freezable: True
 
+# This one contains symlinks in the rclone format
+/repos/test_repo_sftp/:
+    backend: sftp
+    url: sftp:test-repo-sftp
+    user: foo
+    password: pass
+    freezable: True
+
 /repos/test_repo_freeze/:
     backend: sftp
     url: sftp:test-repo
