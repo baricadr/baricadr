@@ -53,8 +53,6 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         if config:
             app.config.from_pyfile(config)
 
-        app.config['MAX_TASK_DURATION'] = _get_int_value(app.config.get('MAX_TASK_DURATION'), 21600)
-
         if 'CLEANUP_ZOMBIES_INTERVAL' in app.config:
             app.config['CLEANUP_ZOMBIES_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_ZOMBIES_INTERVAL'), 3600)
         if 'CLEANUP_INTERVAL' in app.config:
@@ -79,7 +77,7 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         gvars(app)
 
         # Need to be outside the if, else the worker does not have access to the value
-        app.config['CLEANUP_AGE'] = _get_int_value(app.config.get('CLEANUP_AGE'), 0)
+        app.config['CLEANUP_AGE'] = _get_int_value(app.config.get('CLEANUP_AGE'), 365 * 24 * 3600)
         # Moved to not worker, else duplicate tasks (?)
         if not app.is_worker:
             scheduler = APScheduler()
@@ -213,7 +211,7 @@ def freeze_repo(app, repo_path):
 
     celery_status = get_celery_worker_status(app.celery)
     if celery_status['availability'] is None:
-        app.logger.error("trygin to schedule an auto freeze task on repo '%s', but no Celery worker available to process the request. Aborting.", repo_path)
+        app.logger.error("Trying to schedule an auto freeze task on repo '%s', but no Celery worker available to process the request. Aborting.", repo_path)
         return
 
     touching_task_id = app.repos.is_already_touching(repo_path)
@@ -232,7 +230,7 @@ def cleanup(app):
 
 
 def cleanup_zombies(app):
-    app.celery.send_task('cleanup_zombie_tasks', (app.config['MAX_TASK_DURATION'],))
+    app.celery.send_task('cleanup_zombie_tasks')
 
 
 def _get_int_value(config_val, default):

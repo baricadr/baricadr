@@ -104,7 +104,6 @@ def __pull_or_freeze(action, request):
 
     # Check if we're already touching the path
     touching_task_id = current_app.repos.is_already_touching(asked_path)
-    # TODO [HI] check if locked by zombie task?
     if touching_task_id:
         current_app.logger.info("Already touching this path '%s' in task '%s', no new task." % (asked_path, touching_task_id))
         task_id = touching_task_id
@@ -208,6 +207,6 @@ def zombie():
         current_app.logger.error("Received 'zombie' action, but no Celery worker available to process the request. Aborting.")
         return jsonify({'error': 'No Celery worker to process the request'}), 400
 
-    task = current_app.celery.send_task('cleanup_zombie_tasks', (current_app.config['MAX_TASK_DURATION'],))
+    task = current_app.celery.send_task('cleanup_zombie_tasks')
     task_id = task.task_id
     return jsonify({'task': task_id})

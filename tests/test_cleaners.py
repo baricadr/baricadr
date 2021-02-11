@@ -35,26 +35,19 @@ class TestCelery(BaricadrTestCase):
 
         time.sleep(2)
 
-        deleted_tasks = ['id_started', 'id_pulling', 'id_freezing']
+        deleted_tasks = ['id_started', 'id_pulling', 'id_freezing', 'id_waiting']
 
-        task = app.celery.send_task('cleanup_zombie_tasks', (30,))
+        task = app.celery.send_task('cleanup_zombie_tasks')
         AsyncResult(task.id).get(timeout=60)
 
         time.sleep(2)
 
         del_tasks = BaricadrTask.query.filter(BaricadrTask.task_id.in_(deleted_tasks))
 
-        assert del_tasks.count() == 3
+        assert del_tasks.count() == 4
 
         for task in del_tasks:
             assert task.status == "failed"
-
-        pre_tasks = BaricadrTask.query.filter_by(task_id='id_waiting')
-
-        assert pre_tasks.count() == 1
-
-        for task in pre_tasks:
-            assert task.status == "waiting"
 
     def test_cleanup(self, app):
 

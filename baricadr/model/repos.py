@@ -5,6 +5,7 @@ import tempfile
 import time
 
 from baricadr.db_models import BaricadrTask
+from baricadr.utils import get_celery_tasks
 
 import dateutil.parser
 
@@ -158,7 +159,7 @@ class Repo():
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
-                time.sleep(2)
+                time.sleep(1)
                 test_file.read()
                 if not os.stat(test_file.name).st_atime == starting_atime:
                     perms["freezable"] = True
@@ -334,10 +335,17 @@ class Repos():
         Return False otherwise.
         """
 
+        cel_tasks = get_celery_tasks(current_app.celery)
+
         running_tasks = BaricadrTask.query.all()
         for rt in running_tasks:
             if rt.finished is None and path.startswith(rt.path):
-                return rt.task_id
+                if rt.task_id in cel_tasks['active_tasks'] \
+                   or rt.task_id in cel_tasks['reserved_tasks'] \
+                   or rt.task_id in cel_tasks['scheduled_tasks']:
+
+                    # check if locked by a zombie task
+                    return rt.task_id
 
         return False
 
@@ -347,10 +355,17 @@ class Repos():
         Return an empty list otherwise.
         """
 
+        cel_tasks = get_celery_tasks(current_app.celery)
+
         running_tasks = BaricadrTask.query.all()
         locking = []
         for rt in running_tasks:
             if rt.finished is None and rt.path.startswith(path) and path != rt.path:
-                locking.append(rt.task_id)
+                if rt.task_id in cel_tasks['active_tasks'] \
+                   or rt.task_id in cel_tasks['reserved_tasks'] \
+                   or rt.task_id in cel_tasks['scheduled_tasks']:
+
+                    # check if locked by a zombie task
+                    locking.append(rt.task_id)
 
         return locking

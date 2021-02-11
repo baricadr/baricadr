@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from baricadr.app import create_app, create_celery
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db, mail
+from baricadr.utils import celery_task_is_in_queue, get_celery_tasks
 
-from celery.result import AsyncResult
 from celery.signals import task_postrun, task_revoked
 
 from flask_mail import Message
@@ -52,14 +52,8 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     if wait_for:
         app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
-            tries = 0
-            # Wait at most MAX_TASK_DURATION, then continue
-            while tries < app.config['MAX_TASK_DURATION']:
-                res = AsyncResult(wait_id)
-                if str(res.ready()).lower() == "true":
-                    break
-                time.sleep(1)
-                tries += 1
+            while celery_task_is_in_queue(app.celery, wait_id):
+                time.sleep(10)
         dbtask.started = datetime.utcnow()
 
     dbtask.status = vocab[type]
@@ -102,25 +96,27 @@ def freeze(self, path, email=None, wait_for=[], sleep=0):
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
-def cleanup_zombie_tasks(self, max_task_duration):
+def cleanup_zombie_tasks(self):
     """
     Look at the list of tasks in the database and check if they are running or in queue.
     If for some reason a task is in the db but not running/in queue, it means that it is finished or that it got interrupted.
     """
 
-    max_date = datetime.utcnow() - timedelta(seconds=max_task_duration)
+    cel_tasks = get_celery_tasks(app.celery)
+
+    app.logger.info("Got these cel_tasks: %s" % cel_tasks)  # TODO remove log
 
     self.update_state(state='PROGRESS')
 
     num = 0
-    # Filter tasks older than max_delay and kill them
-    running_tasks = BaricadrTask.query.filter(BaricadrTask.started < max_date)
+    # Filter tasks not yet finished/failed
+    running_tasks = BaricadrTask.query.filter(BaricadrTask.status.notin_(["failed", "finished"]))
     for rt in running_tasks:
-        # Do not check tasks in 'waiting' state
-        if rt.status in ['started', 'pulling', 'freezing']:
-            app.logger.debug("Checking zombie for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
-            AsyncResult(rt.task_id).revoke(terminate=True)
-            # Actually set status here and not in signal so we can test it...
+        if rt.task_id not in cel_tasks['active_tasks'] \
+           and rt.task_id not in cel_tasks['reserved_tasks'] \
+           and rt.task_id not in cel_tasks['scheduled_tasks']:
+
+            app.logger.debug("Found zombie state for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
             rt.status = 'failed'
             rt.finished = datetime.utcnow()
             num += 1
@@ -131,7 +127,7 @@ def cleanup_zombie_tasks(self, max_task_duration):
 @celery.task(bind=True, name="cleanup_tasks")
 def cleanup_tasks(self, cleanup_age):
     """
-        Cleanup finished and failed tasks from db
+        Cleanup old finished and failed tasks from db
     """
 
     max_date = datetime.utcnow() - timedelta(seconds=cleanup_age)
