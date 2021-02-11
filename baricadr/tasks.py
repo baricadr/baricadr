@@ -115,8 +115,6 @@ def cleanup_zombie_tasks(self):
 
     cel_tasks = get_celery_tasks(app.celery)
 
-    app.logger.info("Got these cel_tasks: %s" % cel_tasks)  # TODO remove log
-
     self.update_state(state='PROGRESS')
 
     num = 0
