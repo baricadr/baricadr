@@ -38,7 +38,7 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/list", json=body)
 
         assert response.status_code == 200
-        assert len(response.json) == 11
+        assert len(response.json) == 9
 
     def test_list_fill_missing(self, client):
         """
