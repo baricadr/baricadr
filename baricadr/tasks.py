@@ -19,15 +19,22 @@ celery = create_celery(app)
 
 def on_failure(self, exc, task_id, args, kwargs, einfo):
 
-    app.logger.warning("Task %s failed. Exception raised : %s" % (task_id, str(exc)))
+    app.logger.warning("Task %s failed. Exception raised: %s" % (task_id, str(exc)))
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
     dbtask.error = str(exc)
 
-    if "email" in kwargs and kwargs['email']:
-        msg = Message(subject="Failed to %s" % (dbtask.type),
-                      body="Failed to %s %s. Exception raised : %s" % (dbtask.type, dbtask.path, str(exc)),  # TODO [LOW] better text
+    # args[1] is the email adsress
+    if len(args) > 2 and args[1] and len(args[1]) > 0:
+        body = """Hello,
+One of your BARICADR {task} task on path '{path}' failed, with the following error:
+{error}
+Contact the administrator for more info.
+Cheers
+"""
+        msg = Message(subject="BARICADR: {task} task on {path} failed".format(task=dbtask.type, path=dbtask.path),
+                      body=body.format(task=dbtask.type, path=dbtask.path, error=str(exc)),
                       sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                      recipients=kwargs['email'])
+                      recipients=[args[1]])
         mail.send(msg)
 
     dbtask.status = 'failed'
@@ -77,8 +84,12 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     db.session.commit()
 
     if email:
-        msg = Message(subject="Finished %s" % (vocab[type]),
-                      body="Finished %s %s" % (type, path),  # TODO [LOW] better text
+        body = """Hello,
+As you asked, BARICADR has finished {verb} the following path: {path}.
+Cheers
+"""
+        msg = Message(subject="BARICADR: finished {verb} {path}".format(verb=vocab[type], path=path),
+                      body=body.format(verb=vocab[type], path=path),
                       sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
                       recipients=[email])
         mail.send(msg)
@@ -155,10 +166,15 @@ def on_task_revoked(**kwargs):
         email = request.args[1]
 
         if email:
-            msg = Message(subject="Failed to %s" % (request.task),
-                          body="Failed to %s %s, task was removed after expiring" % (request.task, path),  # TODO [LOW] better text
+            body = """Hello,
+One of your BARICADR task '{task}' on path '{path}' was terminated prematurely.
+Contact the administrator for more info.
+Cheers
+"""
+            msg = Message(subject="BARICADR: task {task} on {path} failed".format(task=request.task, path=path),
+                          body=body.format(task=request.task, path=path),
                           sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
-                          recipients=email)
+                          recipients=[email])
             mail.send(msg)
 
 

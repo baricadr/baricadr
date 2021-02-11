@@ -77,11 +77,11 @@ If you prefer to use it using curl, you can do the following:
 
 ### Triggering a "pull"
 
-`curl  -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/some/local/path/test.gz"}'`
+`curl -H "Content-type: application/json" -X POST http://localhost:9100/pull -d '{"path": "/some/local/path/test.gz"}'`
 
 ### Checking the status
 
-`curl  -H "Content-type: application/json" -X GET http://localhost:9100/status/<pull-id>`
+`curl -H "Content-type: application/json" -X GET http://localhost:9100/status/<pull-id>`
 
 With pull-id = the return of the pull POST call above
 
