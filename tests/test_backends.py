@@ -273,8 +273,6 @@ class TestBackends(BaricadrTestCase):
             # Order is unreliable, compare sets
             assert set([file['Path'] for file in repo.remote_list(target, max_depth=2)]) == set([
                 'subfile.txt',
-                'subsubdir/absolute_symlink.tsv',
-                'subsubdir/relative_symlink.tsv',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
                 'subsubdir/poutrelle.tsv',
@@ -302,8 +300,6 @@ class TestBackends(BaricadrTestCase):
             # Order is unreliable, compare sets
             assert set([file['Path'] for file in repo.remote_list(target, max_depth=0)]) == set([
                 'subfile.txt',
-                'subsubdir/absolute_symlink.tsv',
-                'subsubdir/relative_symlink.tsv',
                 'subsubdir2/poutrelle.xml',
                 'subsubdir2/subsubfile.txt',
                 'subsubdir2/subsubsubdir/subsubsubdir2/a file',
