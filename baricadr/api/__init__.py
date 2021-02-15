@@ -98,7 +98,7 @@ def __pull_or_freeze(action, request):
 
         try:
             v = validate_email(email)
-            email = v["email"]
+            email = [v["email"]]
         except EmailNotValidError as e:
             return jsonify({'error': str(e)}), 400
 

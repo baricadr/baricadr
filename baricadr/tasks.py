@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from baricadr.app import create_app, create_celery
 from baricadr.db_models import BaricadrTask
 from baricadr.extensions import db, mail
-from baricadr.utils import celery_task_is_in_queue, get_celery_tasks
+from baricadr.utils import celery_task_is_in_queue, get_celery_tasks, human_readable_size
 
 from celery.signals import task_postrun, task_revoked
 
@@ -23,7 +23,7 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
     dbtask = BaricadrTask.query.filter_by(task_id=task_id).one()
     dbtask.error = str(exc)
 
-    # args[1] is the email adsress
+    # args[1] is the email address
     if len(args) > 2 and args[1] and len(args[1]) > 0:
         body = """Hello,
 One of your BARICADR {task} task on path '{path}' failed, with the following error:
@@ -34,7 +34,7 @@ Cheers
         msg = Message(subject="BARICADR: {task} task on {path} failed".format(task=dbtask.type, path=dbtask.path),
                       body=body.format(task=dbtask.type, path=dbtask.path, error=str(exc)),
                       sender=app.config.get('MAIL_SENDER', 'from@example.com'),
-                      recipients=[args[1]])
+                      recipients=args[1])
         mail.send(msg)
 
     dbtask.status = 'failed'
@@ -52,6 +52,7 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     db.session.commit()
 
     vocab = {'pull': 'pulling', 'freeze': 'freezing'}
+    vocabed = {'pull': 'pulled', 'freeze': 'freezed'}
 
     # For internal testing, cannot be set by api
     time.sleep(sleep)
@@ -73,10 +74,12 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     asked_path = os.path.abspath(path)
     repo = app.repos.get_repo(asked_path)
 
+    modified = None
     if type == "pull":
+        # Would be nice to get the list of pulled file, but seems to be not possible
         repo.pull(asked_path)
     else:
-        repo.freeze(asked_path)
+        modified = repo.freeze(asked_path)
 
     dbtask.status = 'finished'
 
@@ -84,14 +87,21 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     db.session.commit()
 
     if email:
-        body = """Hello,
-As you asked, BARICADR has finished {verb} the following path: {path}.
-Cheers
-"""
+        body = "Hello,\n\nAs you asked, BARICADR has finished {verb} the following path: {path}"
+
+        if modified is not None:
+            if len(modified) == 0:
+                body += "\n\nNo files were %s." % vocabed[type]
+            else:
+                body += "\n\nThe following files were %s (total size: %s):\n\n  " % (vocabed[type], human_readable_size(modified[1]))
+                body += "\n  ".join(modified[0])
+
+        body += "\n\nCheers"
+
         msg = Message(subject="BARICADR: finished {verb} {path}".format(verb=vocab[type], path=path),
                       body=body.format(verb=vocab[type], path=path),
                       sender=app.config.get('MAIL_SENDER', 'from@example.com'),
-                      recipients=[email])
+                      recipients=email)
         mail.send(msg)
 
 
@@ -172,7 +182,7 @@ Cheers
             msg = Message(subject="BARICADR: task {task} on {path} failed".format(task=request.task, path=path),
                           body=body.format(task=request.task, path=path),
                           sender=app.config.get('MAIL_SENDER', 'from@example.com'),
-                          recipients=[email])
+                          recipients=email)
             mail.send(msg)
 
 

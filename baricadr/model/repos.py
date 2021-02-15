@@ -195,6 +195,10 @@ class Repo():
 
         current_app.logger.info("Freezable files: %s" % freezables)
 
+        freezed_size = 0
+        for tofreeze in freezables:
+            freezed_size += os.path.getsize(tofreeze)
+
         for to_freeze in freezables:
             if dry_run:
                 current_app.logger.info("Would freeze '%s' (dry-run mode)" % (to_freeze))
@@ -202,7 +206,7 @@ class Repo():
                 current_app.logger.info("Freezing '%s'" % (to_freeze))
                 self._do_freeze(to_freeze)
 
-        return freezables
+        return (freezables, freezed_size)
 
     # Might actually use this to run safety checks (can_write? others?)
     def _check_perms(self):
@@ -214,6 +218,7 @@ class Repo():
 
         perms = {"writable": True, "freezable": False}
         try:
+            # TODO check if file is deleted
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit

@@ -204,7 +204,6 @@ def setup_freeze_tasks(app, scheduler):
             if not repo.freezable or not repo.auto_freeze:
                 continue
 
-            # TODO pull/freeze/autofreeze reports by email
             app.logger.debug("Creating scheduler job for path : %s with auto_freeze_interval : %s" % (path, repo.auto_freeze_interval))
             scheduler.add_job(func=freeze_repo, args=[app, path], trigger='interval', days=repo.auto_freeze_interval, id="auto_freeze_%s" % (path), name="Auto freeze job for path %s" % (path))
 
@@ -216,10 +215,13 @@ def freeze_repo(app, repo_path):
         app.logger.error("Trying to schedule an auto freeze task on repo '%s', but no Celery worker available to process the request. Aborting.", repo_path)
         return
 
+    admin_email = app.config.get('MAIL_ADMIN', None)
+    admin_email.split(',')
+
     touching_task_id = app.repos.is_already_touching(repo_path)
     if not touching_task_id:
         locking_task_id = app.repos.is_locked_by_subdir(repo_path)
-        task = app.celery.send_task('freeze', (repo_path, None, locking_task_id))
+        task = app.celery.send_task('freeze', (repo_path, admin_email, locking_task_id))
         task_id = task.task_id
 
         pt = BaricadrTask(path=repo_path, type='freeze', task_id=task_id)

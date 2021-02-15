@@ -38,3 +38,12 @@ def celery_task_is_in_queue(celery, task_id):
     return task_id in cel_tasks['active_tasks'] \
         or task_id in cel_tasks['reserved_tasks'] \
         or task_id in cel_tasks['scheduled_tasks']
+
+
+# Borrowed from https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
+def human_readable_size(size, decimal_places=2):
+    for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
+        if size < 1024.0 or unit == 'PiB':
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f} {unit}"
