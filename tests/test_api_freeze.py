@@ -165,22 +165,8 @@ class TestApiFreeze(BaricadrTestCase):
         assert freeze_id == freeze_id_2
 
         # Wait for the task to run
-        wait = 0
-        while wait < 30:
-            sleep(2)
-
-            response = client.get('/tasks/status/%s' % freeze_id)
-
-            assert response.status_code == 200
-
-            if response.json['status'] == "finished":
-                break
-            else:
-                assert not response.json['error']
-            wait += 1
-
-        assert response.json['status'] == "finished"
-        assert not response.json['error']
+        self.wait_for_freeze(client, freeze_id)
+        self.wait_for_freeze(client, freeze_id_2)
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
@@ -218,22 +204,8 @@ class TestApiFreeze(BaricadrTestCase):
         assert freeze_id == freeze_id_2
 
         # Wait for the task to run
-        wait = 0
-        while wait < 30:
-            sleep(2)
-
-            response = client.get('/tasks/status/%s' % freeze_id)
-
-            assert response.status_code == 200
-
-            if response.json['status'] == "finished":
-                break
-            else:
-                assert not response.json['error']
-            wait += 1
-
-        assert response.json['status'] == "finished"
-        assert not response.json['error']
+        self.wait_for_freeze(client, freeze_id)
+        self.wait_for_freeze(client, freeze_id_2)
 
         not_expected_freezed = [
             os.path.join(self.testing_repo, 'file.txt'),
@@ -287,6 +259,47 @@ class TestApiFreeze(BaricadrTestCase):
             os.path.join(self.testing_repo, 'subdir/subsubdir/subsubfile.txt'),
             os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.xml'),
             os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.tsv')
+        ]
+
+        for exp_freezed in expected_freezed:
+            assert not os.path.exists(exp_freezed)
+
+        for not_exp_freezed in not_expected_freezed:
+            assert os.path.exists(not_exp_freezed)
+
+    def test_freeze_race_multiple(self, app, client):
+        """
+        Try to freeze a dir twice at the same time
+        """
+
+        repo_dir = os.path.join(self.testing_repo, 'subdir')
+
+        self.set_old_atime(repo_dir, age=3600 * 5000)
+
+        freeze_id = self.freeze_quick(client, repo_dir + '/subsubdir2')
+        freeze_id_2 = self.freeze_quick(client, repo_dir + '/subsubdir2/subsubsubdir')
+        freeze_id_3 = self.freeze_quick(client, repo_dir + '/subsubdir2/subsubsubdir/subsubsubdir2')
+        freeze_id_4 = self.freeze_quick(client, repo_dir + '/subsubdir2/poutrelle.xml')
+
+        # Wait for the task to run
+        self.wait_for_freeze(client, freeze_id)
+        self.wait_for_freeze(client, freeze_id_2)
+        self.wait_for_freeze(client, freeze_id_3)
+        self.wait_for_freeze(client, freeze_id_4)
+
+        not_expected_freezed = [
+            os.path.join(self.testing_repo, 'file.txt'),
+            os.path.join(self.testing_repo, 'file2.txt'),
+            os.path.join(self.testing_repo, 'subdir/subfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir/poutrelle.tsv')
+        ]
+
+        expected_freezed = [
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubfile.txt'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/poutrelle.xml'),
+            os.path.join(self.testing_repo, 'subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file'),
         ]
 
         for exp_freezed in expected_freezed:
@@ -541,6 +554,3 @@ class TestApiFreeze(BaricadrTestCase):
 
         freeze_id = self.freeze_quick(client, path)
         self.wait_for_freeze(client, freeze_id)
-
-
-# TODO [HI] better test for freezeing a dir when a subdir is already freezeing: multiple subdirs in parallel, timeout waiting

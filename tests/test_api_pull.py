@@ -193,22 +193,8 @@ class TestApiPull(BaricadrTestCase):
         assert pull_id == pull_id_2
 
         # Wait for the task to run
-        wait = 0
-        while wait < 30:
-            sleep(2)
-
-            response = client.get('/tasks/status/%s' % pull_id)
-
-            assert response.status_code == 200
-
-            if response.json['status'] == "finished":
-                break
-            else:
-                assert not response.json['error']
-            wait += 1
-
-        assert response.json['status'] == "finished"
-        assert not response.json['error']
+        self.wait_for_pull(client, pull_id)
+        self.wait_for_pull(client, pull_id_2)
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -233,22 +219,8 @@ class TestApiPull(BaricadrTestCase):
         assert pull_id == pull_id_2
 
         # Wait for the task to run
-        wait = 0
-        while wait < 30:
-            sleep(2)
-
-            response = client.get('/tasks/status/%s' % pull_id)
-
-            assert response.status_code == 200
-
-            if response.json['status'] == "finished":
-                break
-            else:
-                assert not response.json['error']
-            wait += 1
-
-        assert response.json['status'] == "finished"
-        assert not response.json['error']
+        self.wait_for_pull(client, pull_id)
+        self.wait_for_pull(client, pull_id_2)
 
         assert os.path.exists(repo_dir + '/subfile.txt')
         assert os.path.isdir(repo_dir + '/subsubdir')
@@ -280,6 +252,48 @@ class TestApiPull(BaricadrTestCase):
         assert os.path.isdir(repo_dir + '/subsubdir')
         assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
         assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+    def test_pull_race_multiple(self, app, client):
+        """
+        Try to pull multiple dirs at the same time
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        pull_id = self.pull_quick(client, repo_dir + '/subsubdir2')
+        pull_id_2 = self.pull_quick(client, repo_dir + '/subsubdir2/subsubsubdir')
+        pull_id_3 = self.pull_quick(client, repo_dir + '/subsubdir2/subsubsubdir/subsubsubdir2')
+        pull_id_4 = self.pull_quick(client, repo_dir + '/subsubdir2/poutrelle.xml')
+
+        # Some pull_ids will be identical depending on timing
+
+        # Wait for the tasks to run
+        self.wait_for_pull(client, pull_id)
+        self.wait_for_pull(client, pull_id_2)
+        self.wait_for_pull(client, pull_id_3)
+        self.wait_for_pull(client, pull_id_4)
+
+        assert not os.path.exists(repo_dir + '/subfile.txt')
+
+        assert not os.path.isdir(repo_dir + '/subsubdir')
+        assert not os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert not os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+        assert not os.path.exists(repo_dir + '/subsubdir/poutrelle.tsv')
+
+        assert os.path.isdir(repo_dir + '/subsubdir2')
+        assert os.path.exists(repo_dir + '/subsubdir2/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir2/poutrelle.xml')
+        assert os.path.isdir(repo_dir + '/subsubdir2/subsubsubdir')
+        assert os.path.isdir(repo_dir + '/subsubdir2/subsubsubdir/subsubsubdir2')
+        assert os.path.exists(repo_dir + '/subsubdir2/subsubsubdir/subsubsubdir2/a file')
+
+        assert not os.path.exists(repo_dir + '../file.txt')
+        assert not os.path.exists(repo_dir + '../file2.txt')
 
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
@@ -515,5 +529,3 @@ class TestApiPull(BaricadrTestCase):
 
         pull_id = self.pull_quick(client, path)
         self.wait_for_pull(client, pull_id)
-
-# TODO [HI] better test for pulling a dir when a subdir is already pulling: multiple subdirs in parallel, timeout waiting
