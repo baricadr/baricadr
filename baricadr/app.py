@@ -203,6 +203,8 @@ def setup_freeze_tasks(app, scheduler):
         for path, repo in app.repos.repos.items():
             if not repo.freezable or not repo.auto_freeze:
                 continue
+
+            # TODO [hi] pull/freeze/autofreeze reports by email
             app.logger.debug("Creating scheduler job for path : %s with auto_freeze_interval : %s" % (path, repo.auto_freeze_interval))
             scheduler.add_job(func=freeze_repo, args=[app, path], trigger='interval', days=repo.auto_freeze_interval, id="auto_freeze_%s" % (path), name="Auto freeze job for path %s" % (path))
 

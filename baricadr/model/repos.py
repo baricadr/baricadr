@@ -34,6 +34,31 @@ class Repo():
             self.exclude = conf['exclude']
         self.conf = conf
 
+        # Owner conf
+        self.chown_uid = None
+        self.chown_gid = None
+        if 'chown_uid' in conf:
+            try:
+                conf['chown_uid'] = int(conf['chown_uid'])
+            except ValueError:
+                raise ValueError("Malformed repository definition, chown_uid must be a valid linux uid '%s'" % conf)
+
+            if conf['chown_uid'] < 0 or conf['chown_uid'] > 65536:
+                raise ValueError("Malformed repository definition, chown_uid must be a valid linux uid '%s'" % conf)
+
+            self.chown_uid = conf['chown_uid']
+
+        if 'chown_gid' in conf:
+            try:
+                conf['chown_gid'] = int(conf['chown_gid'])
+            except ValueError:
+                raise ValueError("Malformed repository definition, chown_gid must be a valid linux gid '%s'" % conf)
+
+            if conf['chown_gid'] < 0 or conf['chown_gid'] > 65536:
+                raise ValueError("Malformed repository definition, chown_gid must be a valid linux gid '%s'" % conf)
+
+            self.chown_gid = conf['chown_gid']
+
         # Default behaviour should be non-freeze
         self.freezable = False
         if 'freezable' in conf and conf['freezable'] is True:
@@ -77,7 +102,43 @@ class Repo():
         return path.startswith(os.path.join(self.local_path, ""))
 
     def pull(self, path):
-        return self.backend.pull(self, path)
+        res = self.backend.pull(self, path)
+
+        # Touch all pulled files to set atime to now (but not mtime)
+        self.touch_atime(path)
+
+        # Set owner of pulled files
+        self.set_owner(path)
+
+        return res
+
+    def touch_atime(self, path):
+        # Touch all pulled files to set atime to now (but not mtime)
+        current_app.logger.info("Setting atime to path '%s'" % path)
+        if self.backend.remote_is_single(self, path):
+            os.utime(path, (time.time(), os.lstat(path).st_mtime), follow_symlinks=False)
+        else:
+            for root, subdirs, files in os.walk(path):
+                for name in files:
+                    candidate = os.path.join(root, name)
+                    os.utime(candidate, (time.time(), os.lstat(candidate).st_mtime), follow_symlinks=False)
+
+    def set_owner(self, path):
+        if self.chown_uid is not None or self.chown_gid is not None:
+            current_app.logger.info("Changing owner of path '%s'" % path)
+            if self.backend.remote_is_single(self, path):
+                os.chown(path, self.chown_uid if self.chown_uid is not None else -1,
+                         self.chown_gid if self.chown_gid is not None else -1, follow_symlinks=False)
+            else:
+                for root, subdirs, files in os.walk(path):
+                    for name in subdirs:
+                        candidate = os.path.join(root, name)
+                        os.chown(candidate, self.chown_uid if self.chown_uid is not None else -1,
+                                 self.chown_gid if self.chown_gid is not None else -1, follow_symlinks=False)
+                    for name in files:
+                        candidate = os.path.join(root, name)
+                        os.chown(candidate, self.chown_uid if self.chown_uid is not None else -1,
+                                 self.chown_gid if self.chown_gid is not None else -1, follow_symlinks=False)
 
     def remote_is_single(self, path):
         return self.backend.remote_is_single(self, path)

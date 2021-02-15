@@ -93,5 +93,6 @@ class TestApiList(BaricadrTestCase):
         assert sorted(expected, key=lambda k: k['Path']) == sorted(response.json, key=lambda k: k['Path'])
 
 
-# TODO [LOW] document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
-# TODO [LOW] readthedocs for cli
+# TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
+# TODO readthedocs for cli
+# TODO secure api access (if need be)

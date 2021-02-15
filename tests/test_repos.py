@@ -184,3 +184,61 @@ class TestRepos(BaricadrTestCase):
 
         with pytest.raises(ValueError):
             app.repos.do_read_conf(str(conf))
+
+    def test_chown_uid_conf(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'chown_uid': 4586,
+            },
+        }
+
+        repos = app.repos.do_read_conf(str(conf))
+        repo = repos['/foo/bar']
+        assert repo.chown_uid == 4586
+
+    def test_chown_uid_conf_too_big(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'chown_uid': 100000,
+            },
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))
+
+    def test_chown_gid_conf(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'chown_gid': 4586,
+            },
+        }
+
+        repos = app.repos.do_read_conf(str(conf))
+        repo = repos['/foo/bar']
+        assert repo.chown_gid == 4586
+
+    def test_chown_gid_conf_too_big(self, app):
+        conf = {
+            '/foo/bar': {
+                'backend': 's3',
+                'url': 'google',
+                'user': 'someone',
+                'password': 'xxxxx',
+                'chown_gid': 100000,
+            },
+        }
+
+        with pytest.raises(ValueError):
+            app.repos.do_read_conf(str(conf))

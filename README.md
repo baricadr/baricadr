@@ -131,6 +131,8 @@ You should write a yaml file containing the list of repositories managed by Bari
     freeze_age: 365   # By default Baricadr will "freeze" files older than 180 days (6 months). You can change this limit with this parameter.
     auto_freeze: True  # Set this to True to schedule regular automated freeze tasks on the whole repo content (default: False)
     auto_freeze_interval: 7  # Delay (in days) between each regular automated freeze task (ignored if auto_freeze is False)
+    chown_uid: 9876  # When pulling files, change owner to specified user id (default: the user running baricadr, root)
+    chown_gid: 9876  # When pulling files, change owner to specified group id (default: the user running baricadr, root)
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file

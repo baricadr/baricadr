@@ -18,6 +18,8 @@
     user: foo
     password: pass
     freezable: True
+    chown_uid: 9876
+    chown_gid: 9786
 
 # This one contains symlinks in the rclone format
 /repos/test_repo_sftp/:

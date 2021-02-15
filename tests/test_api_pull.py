@@ -493,6 +493,37 @@ class TestApiPull(BaricadrTestCase):
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
+    def test_pull_chown(self, app, client):
+        """
+        Try to pull a dir in normal conditions and check chown
+        """
+
+        repo_dir = '/repos/test_repo/subdir'
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        self.pull_and_wait(client, repo_dir)
+
+        assert os.path.exists(repo_dir + '/subfile.txt')
+        assert os.path.isdir(repo_dir + '/subsubdir')
+        assert os.path.exists(repo_dir + '/subsubdir/subsubfile.txt')
+        assert os.path.exists(repo_dir + '/subsubdir/poutrelle.xml')
+
+        # Check owner
+        assert os.stat(repo_dir + '/subfile.txt').st_uid == 9876
+        assert os.stat(repo_dir + '/subfile.txt').st_gid == 9786
+        assert os.stat(repo_dir + '/subsubdir').st_uid == 9876
+        assert os.stat(repo_dir + '/subsubdir').st_gid == 9786
+        assert os.stat(repo_dir + '/subsubdir/subsubfile.txt').st_uid == 9876
+        assert os.stat(repo_dir + '/subsubdir/subsubfile.txt').st_gid == 9786
+        assert os.stat(repo_dir + '/subsubdir/subsubfile.txt').st_uid == 9876
+        assert os.stat(repo_dir + '/subsubdir/subsubfile.txt').st_gid == 9786
+        assert os.stat(repo_dir + '/subsubdir2/subsubsubdir').st_uid == 9876
+        assert os.stat(repo_dir + '/subsubdir2/subsubsubdir').st_gid == 9786
+
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
     def pull_quick(self, client, path, email=None):
         data = {
             'path': path
