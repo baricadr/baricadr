@@ -33,7 +33,7 @@ Cheers
 """
         msg = Message(subject="BARICADR: {task} task on {path} failed".format(task=dbtask.type, path=dbtask.path),
                       body=body.format(task=dbtask.type, path=dbtask.path, error=str(exc)),
-                      sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
+                      sender=app.config.get('MAIL_SENDER', 'from@example.com'),
                       recipients=[args[1]])
         mail.send(msg)
 
@@ -90,7 +90,7 @@ Cheers
 """
         msg = Message(subject="BARICADR: finished {verb} {path}".format(verb=vocab[type], path=path),
                       body=body.format(verb=vocab[type], path=path),
-                      sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
+                      sender=app.config.get('MAIL_SENDER', 'from@example.com'),
                       recipients=[email])
         mail.send(msg)
 
@@ -171,7 +171,7 @@ Cheers
 """
             msg = Message(subject="BARICADR: task {task} on {path} failed".format(task=request.task, path=path),
                           body=body.format(task=request.task, path=path),
-                          sender=app.config.get('SENDER_EMAIL', 'from@example.com'),
+                          sender=app.config.get('MAIL_SENDER', 'from@example.com'),
                           recipients=[email])
             mail.send(msg)
 
