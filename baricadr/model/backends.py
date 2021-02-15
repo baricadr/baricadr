@@ -85,7 +85,6 @@ class RcloneBackend(Backend):
         remote_list = self.remote_list(repo, path, max_depth=0)
         return len(remote_list) == 1
 
-    # TODO [LOW] we could use the --hash option of lsjson (may be slow, but may be useful)
     def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
         """
         List content in a distant path

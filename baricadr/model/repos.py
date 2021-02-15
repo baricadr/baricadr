@@ -124,9 +124,6 @@ class Repo():
         :return: list of freezed files
         """
 
-        # TODO [LOW] keep track of md5 if needed for checking
-        # TODO [LOW] check rclone check -> does it work without hash support with sftp in rclone?
-
         current_app.logger.info("Asked to freeze '%s'" % path)
         if not (force or self.freezable):
             return []
