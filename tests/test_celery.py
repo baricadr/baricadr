@@ -19,7 +19,7 @@ class TestCelery(BaricadrTestCase):
 
     def test_celery_task_fails(self, app, client):
 
-        path = '/repos/test_repo/subdir'
+        path = '/some/wrong/path/test_repo/subdir'
 
         task = app.celery.send_task('pull', (path, None, [None]))
         task_id = task.task_id
@@ -34,4 +34,4 @@ class TestCelery(BaricadrTestCase):
         res = client.get('/tasks/status/{}'.format(task_id))
 
         assert res.json['status'] == 'failed'
-        assert res.json['error'] == "AsyncResult requires valid id, not <class 'NoneType'>"
+        assert res.json['error'] == "Could not find baricadr repository for path \"%s/\"" % path
