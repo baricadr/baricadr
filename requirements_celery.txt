@@ -1,5 +1,5 @@
 # Minimal dependencies for celery workers
-celery<5  # TODO Flower doesn't support celery 5 yet
+celery<5  # Flower doesn't support celery 5 yet
 flower
 redis
 

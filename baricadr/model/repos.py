@@ -230,7 +230,7 @@ class Repo():
 
         perms = {"writable": True, "freezable": False}
         try:
-            # TODO sometimes tmp file not deleted (restart in dev mode?)
+            # Sometimes tmp file can escape their deletion: I guess it comes from multiple live code reload in dev mode
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
