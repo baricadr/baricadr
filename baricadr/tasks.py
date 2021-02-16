@@ -90,7 +90,7 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
         body = "Hello,\n\nAs you asked, BARICADR has finished {verb} the following path: {path}"
 
         if modified is not None:
-            if len(modified) == 0:
+            if len(modified[0]) == 0:
                 body += "\n\nNo files were %s." % vocabed[type]
             else:
                 body += "\n\nThe following files were %s (total size: %s):\n\n  " % (vocabed[type], human_readable_size(modified[1]))
