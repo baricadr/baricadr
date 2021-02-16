@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import tempfile
 from subprocess import PIPE, Popen
 
@@ -39,7 +40,7 @@ class Backend():
         self.user = conf['user']
         self.password = conf['password']
 
-    def pull(self, repo, path):
+    def pull(self, repo, path, dry_run=False):
         """
         Download a file from remote into local repository
 
@@ -190,6 +191,39 @@ class RcloneBackend(Backend):
 
         return tempRcloneConfig
 
+    # TODO test this
+    def parse_copy_output(self, stderr, dry_run):
+        """
+        Do some dirty things: parse rclone copy stderr to guess which files were transferred
+        """
+        copied = []
+        transferred = 0
+
+        # Look for copied files
+        if dry_run:
+            copied = re.findall(r'NOTICE: ([\w\-. /]+): Skipped copy as --dry-run is set', stderr.decode('utf-8'))
+        else:
+            copied = re.findall(r'INFO  : ([\w\-. /]+): Copied', stderr.decode('utf-8'))
+
+        # Look for transferred bytes
+        m = re.search(r'Transferred: .+/ ([0-9.]+) ([A-Z])?Bytes', stderr.decode('utf-8'))
+        if m:
+            transferred = float(m.group(1))
+            if m.group(2) is not None:
+                unit = m.group(2)
+                if unit == "K":
+                    transferred = transferred * 1024
+                elif unit == "M":
+                    transferred = transferred * 1024 * 1024
+                elif unit == "G":
+                    transferred = transferred * 1024 * 1024 * 1024
+                elif unit == "T":
+                    transferred = transferred * 1024 * 1024 * 1024 * 1024
+                elif unit == "P":
+                    transferred = transferred * 1024 * 1024 * 1024 * 1024 * 1024
+
+        return (copied, transferred)
+
 
 class SftpBackend(RcloneBackend):
     def __init__(self, conf):
@@ -200,7 +234,7 @@ class SftpBackend(RcloneBackend):
         self.remote_host = url_split[0]
         self.remote_prefix = os.path.join(url_split[1], '')
 
-    def pull(self, repo, path):
+    def pull(self, repo, path, dry_run=False):
         obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = self.temp_rclone_config()
 
@@ -219,18 +253,25 @@ class SftpBackend(RcloneBackend):
             for ex in excludes:
                 ex_options += " --exclude '%s'" % ex.strip()
 
+        if dry_run:
+            ex_options += " --dry-run"
+
         # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
-        cmd = "rclone %s --links --ignore-existing --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
-        current_app.logger.debug("Running command: %s" % cmd)
+        cmd = "rclone %s --links --ignore-existing -vv --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
+        current_app.logger.info("Running command: %s" % cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
         retcode = p.returncode
 
+        current_app.logger.info("rclone %s exit code: %s" % (rclone_cmd, retcode))
+        current_app.logger.info("rclone %s stdout: %s" % (rclone_cmd, output))
+        current_app.logger.info("rclone %s stderr: %s" % (rclone_cmd, err))
+
         if retcode != 0:
-            current_app.logger.error(output)
-            current_app.logger.error(err)
             raise RuntimeError("Rclone cmd was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
         tempRcloneConfig.close()
+
+        return self.parse_copy_output(err, dry_run)
 
 
 class S3Backend(RcloneBackend):
@@ -238,5 +279,5 @@ class S3Backend(RcloneBackend):
         RcloneBackend.__init__(self, conf)
         self.name = 's3'
 
-    def pull(self, repo, path):
+    def pull(self, repo, path, dry_run=False):
         raise NotImplementedError()

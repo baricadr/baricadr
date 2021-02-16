@@ -101,14 +101,24 @@ class Repo():
 
         return path.startswith(os.path.join(self.local_path, ""))
 
-    def pull(self, path):
-        res = self.backend.pull(self, path)
+    def pull(self, path, dry_run=False):
+        """
+        Pull files from remote repository
 
-        # Touch all pulled files to set atime to now (but not mtime)
-        self.touch_atime(path)
+        :type path: str
+        :param path: Path where baricadr should pull files
 
-        # Set owner of pulled files
-        self.set_owner(path)
+        :type dry_run: bool
+        :param dry_run: Do not pull anything, just print what would be done in normal mode.
+        """
+        res = self.backend.pull(self, path, dry_run=dry_run)
+
+        if not dry_run:
+            # Touch all pulled files to set atime to now (but not mtime)
+            self.touch_atime(path)
+
+            # Set owner of pulled files
+            self.set_owner(path)
 
         return res
 
@@ -168,6 +178,7 @@ class Repo():
 
         return self.backend.remote_list(self, path, missing, max_depth, from_root, full)
 
+    # TODO check if/how force mode is used
     def freeze(self, path, force=False, dry_run=False):
         """
         Remove files from local repository
@@ -186,6 +197,7 @@ class Repo():
         """
 
         current_app.logger.info("Asked to freeze '%s'" % path)
+
         if not (force or self.freezable):
             return ([], 0)
 

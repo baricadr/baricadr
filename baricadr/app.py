@@ -58,6 +58,14 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         if 'CLEANUP_INTERVAL' in app.config:
             app.config['CLEANUP_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_INTERVAL'), 21600)
 
+        if 'TASK_LOG_DIR' in app.config:
+            app.config['TASK_LOG_DIR'] = os.path.abspath(app.config['TASK_LOG_DIR'])
+        else:
+            app.config['TASK_LOG_DIR'] = os.path.abspath(os.getenv('TASK_LOG_DIR', '/var/log/baricadr/tasks/'))
+
+        if app.is_worker:
+            os.makedirs(app.config['TASK_LOG_DIR'], exist_ok=True)
+
         # Load the list of baricadr repositories
         app.backends = backends.Backends()
         if 'BARICADR_REPOS_CONF' in app.config:
@@ -178,15 +186,11 @@ def configure_logging(app):
     )
     app.logger.addHandler(info_file_handler)
 
-    # Testing
-    # app.logger.info("testing info.")
-    # app.logger.warn("testing warn.")
-    # app.logger.error("testing error.")
-
+    # TODO make this work
     mail_handler = SMTPHandler(app.config['MAIL_SERVER'],
-                               app.config['MAIL_USERNAME'],
-                               app.config['ADMINS'],
-                               'O_ops... %s failed!' % app.config['PROJECT'],
+                               app.config['MAIL_SENDER'],
+                               app.config['MAIL_ADMIN'],
+                               'BARICADR failed!',
                                (app.config['MAIL_USERNAME'],
                                 app.config['MAIL_PASSWORD']))
     mail_handler.setLevel(logging.ERROR)

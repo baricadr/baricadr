@@ -17,7 +17,7 @@ api = Blueprint('api', __name__, url_prefix='/')
 # Endpoint to check if API is running for CLI tests
 @api.route('/version', methods=['GET'])
 def version():
-    return jsonify({"version": current_app.config.get("BARICADR_VERSION", "1.0.0")})
+    return jsonify({"version": current_app.config.get("BARICADR_VERSION", "unknown")})
 
 
 # Might return arguments?
@@ -90,7 +90,7 @@ def __pull_or_freeze(action, request):
     celery_status = get_celery_worker_status(current_app.celery)
     if celery_status['availability'] is None:
         current_app.logger.error("Received '%s' action on path '%s', but no Celery worker available to process the request. Aborting." % (action, asked_path))
-        return jsonify({'error': 'No Celery worker to process the request'}), 400
+        return jsonify({'error': 'No Celery worker available to process the request'}), 400
 
     email = None
     if 'email' in request.json:
@@ -102,6 +102,10 @@ def __pull_or_freeze(action, request):
         except EmailNotValidError as e:
             return jsonify({'error': str(e)}), 400
 
+    dry_run = False
+    if 'dry_run' in request.json:
+        dry_run = request.json['dry_run'].lower() in ["true", "1", "yes"]
+
     # Check if we're already touching the path
     touching_task_id = current_app.repos.is_already_touching(asked_path)
     if touching_task_id:
@@ -110,7 +114,7 @@ def __pull_or_freeze(action, request):
     else:
         locking_task_id = current_app.repos.is_locked_by_subdir(asked_path)
 
-        task = current_app.celery.send_task(action, (asked_path, email, locking_task_id))
+        task = current_app.celery.send_task(action, (asked_path, email, locking_task_id, dry_run))
         task_id = task.task_id
         current_app.logger.info("Created %s task %s" % (action, task_id))
 
@@ -142,6 +146,8 @@ def task_list():
 
     return jsonify(tasks_json)
 
+
+# TODO method to get logs from a task
 
 @api.route('/tasks/status/<task_id>', methods=['GET'])
 def task_show(task_id):
@@ -205,7 +211,7 @@ def zombie():
     celery_status = get_celery_worker_status(current_app.celery)
     if celery_status['availability'] is None:
         current_app.logger.error("Received 'zombie' action, but no Celery worker available to process the request. Aborting.")
-        return jsonify({'error': 'No Celery worker to process the request'}), 400
+        return jsonify({'error': 'No Celery worker available to process the request'}), 400
 
     task = current_app.celery.send_task('cleanup_zombie_tasks')
     task_id = task.task_id

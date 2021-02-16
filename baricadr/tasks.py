@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from datetime import datetime, timedelta
@@ -42,7 +43,7 @@ Cheers
     db.session.commit()
 
 
-def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0):
+def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=False, sleep=0):
 
     # Wait a bit in case the tasks begin just before it is recorded in the db
     time.sleep(2)
@@ -74,12 +75,23 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     asked_path = os.path.abspath(path)
     repo = app.repos.get_repo(asked_path)
 
+    # Temporary logger
+    logfile = "{}/{}_{}.log".format(app.config['TASK_LOG_DIR'], dbtask.started.strftime("%Y-%m-%d_%H-%M-%S"), task_id)
+    task_file_handler = logging.FileHandler(logfile)
+    task_file_handler.setLevel(logging.INFO)
+    task_file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s '
+        '[in %(pathname)s:%(lineno)d]')
+    )
+    app.logger.addHandler(task_file_handler)
+
     modified = None
     if type == "pull":
-        # Would be nice to get the list of pulled file, but seems to be not possible
-        repo.pull(asked_path)
+        modified = repo.pull(asked_path, dry_run=dry_run)
     else:
-        modified = repo.freeze(asked_path)
+        modified = repo.freeze(asked_path, dry_run=dry_run)
+
+    app.logger.removeHandler(task_file_handler)
 
     dbtask.status = 'finished'
 
@@ -87,33 +99,34 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], sleep=0)
     db.session.commit()
 
     if email:
-        body = "Hello,\n\nAs you asked, BARICADR has finished {verb} the following path: {path}"
+        say_dry_run = " (DRY RUN)" if dry_run else ""
+        verb_dry_run = "would be" if dry_run else "were"
+        body = "Hello,\n\nAs you asked, BARICADR has finished {verb} the following path{dry_run}: {path}"
 
         if modified is not None:
             if len(modified[0]) == 0:
-                body += "\n\nNo files were %s." % vocabed[type]
+                body += "\n\nNo files %s %s." % (verb_dry_run, vocabed[type])
             else:
-                body += "\n\nThe following files were %s (total size: %s):\n\n  " % (vocabed[type], human_readable_size(modified[1]))
+                body += "\n\nThe following files %s %s (total size: %s):\n\n  " % (verb_dry_run, vocabed[type], human_readable_size(modified[1]))
                 body += "\n  ".join(modified[0])
 
         body += "\n\nCheers"
 
-        msg = Message(subject="BARICADR: finished {verb} {path}".format(verb=vocab[type], path=path),
-                      body=body.format(verb=vocab[type], path=path),
+        msg = Message(subject="BARICADR: finished {verb}{dry_run} {path}".format(verb=vocab[type], path=path, dry_run=say_dry_run),
+                      body=body.format(verb=vocab[type], path=path, dry_run=say_dry_run),
                       sender=app.config.get('MAIL_SENDER', 'from@example.com'),
                       recipients=email)
         mail.send(msg)
 
 
-# Maybe fuse the tasks also?
 @celery.task(bind=True, name="pull", on_failure=on_failure)
-def pull(self, path, email=None, wait_for=[], sleep=0):
-    run_repo_action(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, sleep=sleep)
+def pull(self, path, email=None, wait_for=[], dry_run=False, sleep=0):
+    run_repo_action(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
 
 
 @celery.task(bind=True, name="freeze", on_failure=on_failure)
-def freeze(self, path, email=None, wait_for=[], sleep=0):
-    run_repo_action(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, sleep=sleep)
+def freeze(self, path, email=None, wait_for=[], dry_run=False, sleep=0):
+    run_repo_action(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
@@ -154,6 +167,7 @@ def cleanup_tasks(self, cleanup_age):
 
     num = 0
     for ft in finished_tasks:
+        # TODO delete log file too
         app.logger.debug("Clearing finished task %s with status %s (type = %s, path = %s)'" % (ft.task_id, ft.status, ft.type, ft.path))
         db.session.delete(ft)
         db.session.commit()
