@@ -81,7 +81,7 @@ If you prefer to use it using curl, you can do the following:
 
 ### Checking the status
 
-`curl -H "Content-type: application/json" -X GET http://localhost:9100/status/<pull-id>`
+`curl -H "Content-type: application/json" -X GET http://localhost:9100/tasks/status/<pull-id>`
 
 With pull-id = the return of the pull POST call above
 

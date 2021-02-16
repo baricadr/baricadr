@@ -147,8 +147,6 @@ def task_list():
     return jsonify(tasks_json)
 
 
-# TODO method to get logs from a task
-
 @api.route('/tasks/status/<task_id>', methods=['GET'])
 def task_show(task_id):
     current_app.logger.info("API call: Getting status of task %s" % task_id)
@@ -175,6 +173,34 @@ def task_show(task_id):
         code = 404
 
     current_app.logger.debug("Task state from database: %s" % status)
+    return make_response(jsonify(status), code)
+
+
+@api.route('/tasks/log/<task_id>', methods=['GET'])
+def task_log(task_id):
+    current_app.logger.info("API call: Getting logs of task %s" % task_id)
+
+    status = {}
+
+    # Get status from db (if still there)
+    db_task = BaricadrTask.query.filter_by(task_id=task_id)
+    if db_task.count():
+        db_task = db_task.one()
+        logfile = "{}/{}_{}.log".format(current_app.config['TASK_LOG_DIR'], db_task.started.strftime("%Y-%m-%d_%H-%M-%S"), task_id)
+
+        if not os.path.exists(logfile) or not os.path.isfile(logfile):
+            status = {'error': 'Task log not found, maybe it is too old.'}
+            code = 404
+        else:
+            with open(logfile, 'r') as logfileh:
+                status = {
+                    'logs': logfileh.read(),
+                }
+            code = 200
+    else:
+        status = {'error': 'Task not found in Baricadr database. Maybe it is too old.'}
+        code = 404
+
     return make_response(jsonify(status), code)
 
 

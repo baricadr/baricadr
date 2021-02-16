@@ -182,7 +182,6 @@ class RcloneBackend(Backend):
                     yield x
 
     def temp_rclone_config(self):
-        # TODO check if file is deleted
         tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
         tempRcloneConfig.write('[' + self.name + ']\n')
         tempRcloneConfig.write('type = ' + self.name + '\n')

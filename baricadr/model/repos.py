@@ -230,7 +230,7 @@ class Repo():
 
         perms = {"writable": True, "freezable": False}
         try:
-            # TODO check if file is deleted
+            # TODO sometimes tmp file not deleted (restart in dev mode?)
             with tempfile.NamedTemporaryFile(dir=self.local_path) as test_file:
                 starting_atime = os.stat(test_file.name).st_atime
                 # Need to wait a bit
@@ -238,7 +238,8 @@ class Repo():
                 test_file.read()
                 if not os.stat(test_file.name).st_atime == starting_atime:
                     perms["freezable"] = True
-        except OSError:
+        except OSError as err:
+            current_app.logger.error("Got error while checking perms on %s: %s" % (self.local_path, err))
             perms["writable"] = False
 
         current_app.logger.info("Worker process, perms detected for repo %s: %s" % (self.local_path, perms))

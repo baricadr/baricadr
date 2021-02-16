@@ -20,6 +20,7 @@ services:
             - ./test-data/test-fs-mountpoint/:/repos/
             - ./:/baricadr/
             - ./docker/uwsgi_dev.ini:/etc/uwsgi/uwsgi.ini:ro
+            - task_logs:/var/log/baricadr/tasks/
 
     worker:
         build:
@@ -35,6 +36,7 @@ services:
             - ./test-data/test-fs-mountpoint/:/repos/
             - ./:/baricadr/:ro
             - ./docker_celery/celery_dev_launch.py:/opt/celery_dev_launch.py:ro
+            - task_logs:/var/log/baricadr/tasks/
 
     monitor:
         build:
@@ -70,3 +72,7 @@ services:
         image: postgres:11-alpine
         environment:
           POSTGRES_PASSWORD: postgres
+
+volumes:
+    # A volume shared between baricadr app and worker
+    task_logs:
