@@ -20,4 +20,4 @@ class BaricadrTask(db.Model):
         return '<BaricadrTask {} {} {} {}>'.format(self.type, self.path, self.task_id, self.status)
 
     def logfile_path(self, app, task_id):
-        return "{}/{}_{}.log".format(app.config['TASK_LOG_DIR'], self.started.strftime("%Y-%m-%d_%H-%M-%S"), task_id)
+        return "{}/{}_{}.log".format(app.config['TASK_LOG_DIR'], self.created.strftime("%Y-%m-%d_%H-%M-%S"), task_id)

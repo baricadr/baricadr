@@ -26,10 +26,10 @@ class TestCelery(BaricadrTestCase):
         expired_time = datetime.utcnow() - timedelta(seconds=60)
 
         # Create fake zombies tasks
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_started', started=expired_time, status='started'))
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_pulling', started=expired_time, status='pulling'))
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_freezing', started=expired_time, status='freezing'))
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_waiting', started=expired_time, status='waiting'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_started', created=expired_time, started=expired_time, status='started'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_pulling', created=expired_time, started=expired_time, status='pulling'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_freezing', created=expired_time, started=expired_time, status='freezing'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_waiting', created=expired_time, started=expired_time, status='waiting'))
 
         db.session.commit()
 
@@ -55,8 +55,8 @@ class TestCelery(BaricadrTestCase):
         expired_time = datetime.utcnow() - timedelta(seconds=60)
 
         # Create fake finished tasks
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_finished', finished=expired_time, status='finished'))
-        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_failed', finished=expired_time, status='failed'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_finished', created=expired_time, finished=expired_time, status='finished'))
+        db.session.add(BaricadrTask(path='/repos/test_repo/subdir', type="pull", task_id='id_failed', created=expired_time, finished=expired_time, status='failed'))
 
         db.session.commit()
 
