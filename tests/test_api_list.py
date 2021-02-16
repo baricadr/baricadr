@@ -96,3 +96,6 @@ class TestApiList(BaricadrTestCase):
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
 # TODO readthedocs for cli
 # TODO secure api access (if need be)
+# TODO update barique
+# TODO quay.io images
+# TODO proper release
