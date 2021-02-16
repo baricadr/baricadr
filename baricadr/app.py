@@ -253,3 +253,12 @@ def _get_int_value(config_val, default):
     except ValueError:
         config_val = default
     return config_val
+
+
+# TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
+# TODO readthedocs for barique
+# TODO secure api access (if need be)
+# TODO secure barique credentials
+# TODO quay.io images
+# TODO pypi barique
+# TODO proper release
