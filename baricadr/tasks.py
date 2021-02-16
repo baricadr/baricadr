@@ -76,7 +76,7 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=
     repo = app.repos.get_repo(asked_path)
 
     # Temporary logger
-    logfile = "{}/{}_{}.log".format(app.config['TASK_LOG_DIR'], dbtask.started.strftime("%Y-%m-%d_%H-%M-%S"), task_id)
+    logfile = dbtask.logfile_path(app, task_id)
     task_file_handler = logging.FileHandler(logfile)
     task_file_handler.setLevel(logging.INFO)
     task_file_handler.setFormatter(logging.Formatter(
@@ -167,7 +167,10 @@ def cleanup_tasks(self, cleanup_age):
 
     num = 0
     for ft in finished_tasks:
-        # TODO delete log file too
+        # Delete log file
+        logfile = ft.logfile_path(app, ft.task_id)
+        if os.path.exists(logfile):
+            os.remove(logfile)
         app.logger.debug("Clearing finished task %s with status %s (type = %s, path = %s)'" % (ft.task_id, ft.status, ft.type, ft.path))
         db.session.delete(ft)
         db.session.commit()

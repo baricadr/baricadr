@@ -186,7 +186,7 @@ def task_log(task_id):
     db_task = BaricadrTask.query.filter_by(task_id=task_id)
     if db_task.count():
         db_task = db_task.one()
-        logfile = "{}/{}_{}.log".format(current_app.config['TASK_LOG_DIR'], db_task.started.strftime("%Y-%m-%d_%H-%M-%S"), task_id)
+        logfile = db_task.logfile_path(current_app, task_id)
 
         if not os.path.exists(logfile) or not os.path.isfile(logfile):
             status = {'error': 'Task log not found, maybe it is too old.'}
