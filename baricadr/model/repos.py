@@ -178,7 +178,6 @@ class Repo():
 
         return self.backend.remote_list(self, path, missing, max_depth, from_root, full)
 
-    # TODO check if/how force mode is used
     def freeze(self, path, force=False, dry_run=False):
         """
         Remove files from local repository
