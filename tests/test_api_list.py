@@ -94,8 +94,9 @@ class TestApiList(BaricadrTestCase):
 
 
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
-# TODO readthedocs for cli
+# TODO readthedocs for barique
 # TODO secure api access (if need be)
-# TODO update barique
+# TODO secure barique credentials
 # TODO quay.io images
+# TODO pypi barique
 # TODO proper release
