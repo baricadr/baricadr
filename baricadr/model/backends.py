@@ -190,7 +190,6 @@ class RcloneBackend(Backend):
 
         return tempRcloneConfig
 
-    # TODO test this
     def parse_copy_output(self, stderr, dry_run):
         """
         Do some dirty things: parse rclone copy stderr to guess which files were transferred
@@ -220,6 +219,7 @@ class RcloneBackend(Backend):
                     transferred = transferred * 1024 * 1024 * 1024 * 1024
                 elif unit == "P":
                     transferred = transferred * 1024 * 1024 * 1024 * 1024 * 1024
+            transferred = int(transferred)
 
         return (copied, transferred)
 
