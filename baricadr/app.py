@@ -186,13 +186,17 @@ def configure_logging(app):
     )
     app.logger.addHandler(info_file_handler)
 
-    # TODO make this work
-    mail_handler = SMTPHandler(app.config['MAIL_SERVER'],
+    credentials = None
+    if 'MAIL_USERNAME' in app.config and 'MAIL_PASSWORD' in app.config:
+        credentials = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+    mailhost = app.config['MAIL_SERVER']
+    if 'MAIL_PORT' in app.config:
+        mailhost = (app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+    mail_handler = SMTPHandler(mailhost,
                                app.config['MAIL_SENDER'],
                                app.config['MAIL_ADMIN'],
                                'BARICADR failed!',
-                               (app.config['MAIL_USERNAME'],
-                                app.config['MAIL_PASSWORD']))
+                               credentials)
     mail_handler.setLevel(logging.ERROR)
     mail_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s '

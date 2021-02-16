@@ -15,6 +15,8 @@ class BaseConfig(object):
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    LOG_FOLDER = "/var/log/baricadr/"
+
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
