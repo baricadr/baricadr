@@ -187,7 +187,7 @@ class Repo():
 
         current_app.logger.info("Asked to freeze '%s'" % path)
         if not (force or self.freezable):
-            return []
+            return ([], 0)
 
         remote_list = self.remote_list(path, max_depth=0, from_root=True, full=True)
 
