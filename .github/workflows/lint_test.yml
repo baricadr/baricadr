@@ -28,12 +28,12 @@ jobs:
     - name: Prepare conf
       run: cp local.example.cfg local.cfg
     - name: Build containers
-      run: docker-compose build
+      run: docker-compose -f docker-compose.dev.yml build
     - name: Launch containers
       run: |
-        docker-compose up -d
+        docker-compose -f docker-compose.dev.yml up -d
         sleep 15
-        docker-compose logs
+        docker-compose -f docker-compose.dev.yml logs
     - name: Run tests
       run: |
-        docker-compose exec -T baricadr pytest -v --log-cli-level debug
+        docker-compose -f docker-compose.dev.yml exec -T baricadr pytest -v --log-cli-level debug
