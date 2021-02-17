@@ -256,8 +256,6 @@ def _get_int_value(config_val, default):
 
 
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
-# TODO secure api access (if need be)
-# TODO http basic credentials in barique
 
 # TODO proper release
 # TODO readthedocs for barique

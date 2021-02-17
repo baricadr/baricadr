@@ -17,10 +17,13 @@ services:
             - db
         environment: *baricadr-variables
         volumes:
-            - repos:/repos/
+            - ./test-data/test-fs-mountpoint/:/repos/
             - ./:/baricadr/
             - ./docker/uwsgi_dev.ini:/etc/uwsgi/uwsgi.ini:ro
             - task_logs:/var/log/baricadr/tasks/
+            # This adds an HTTP basic auth, with a preconfigured account: login=baricadr password=baricadr
+            - ./docker/nginx_baricadr_auth.conf:/etc/nginx/conf.d/nginx_baricadr.conf:ro
+            - ./docker/htpasswd_user:/etc/nginx/conf.d/htpasswd_user:ro
 
     worker:
         build:
@@ -33,7 +36,7 @@ services:
         command: /opt/celery_dev_launch.py
         environment: *baricadr-variables
         volumes:
-            - repos:/repos/
+            - ./test-data/test-fs-mountpoint/:/repos/
             - ./:/baricadr/:ro
             - ./docker_celery/celery_dev_launch.py:/opt/celery_dev_launch.py:ro
             - task_logs:/var/log/baricadr/tasks/
@@ -74,6 +77,5 @@ services:
           POSTGRES_PASSWORD: postgres
 
 volumes:
-    # Volumes shared between baricadr app and worker
-    repos:
+    # A volume shared between baricadr app and worker
     task_logs:

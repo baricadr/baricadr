@@ -148,3 +148,18 @@ docker-compose exec baricadr flask db upgrade
 ```
 
 In testing and development mode, it uses a SQLite database stored in app/data.sqlite
+
+## Authentication
+
+**No** authentication mechanism is implemented in Baricadr. To restrict usage, you can run Baricadr behind a reverse proxy that will take care of authentication.
+
+You can for example run Baricadr behind an Nginx (or Apache) reverse proxy, configured to use LDAP authentication, or a simple HTTP Basic auth.
+
+Look at [docker-compose.local-fs-auth.yml](./docker-compose.local-fs-auth.yml) for an example of such a system where the Baricadr API is restricted to a `baricadr` user (password: `baricadr`).
+
+Commands used to generate the [htpasswd_user](./docker/htpasswd_user) file:
+
+```
+echo -n 'baricadr:' >> ./docker/htpasswd_user
+openssl passwd -apr1 >> ./docker/htpasswd_user
+```
