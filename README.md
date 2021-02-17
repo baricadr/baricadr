@@ -1,6 +1,7 @@
 # Baricadr
 
 [![Lint and test](https://github.com/baricadr/baricadr/workflows/Lint%20and%20test/badge.svg)](https://github.com/baricadr/baricadr/actions)
+[![Docker Repository on Quay](https://quay.io/repository/baricadr/baricadr/status "Docker Repository on Quay")](https://quay.io/repository/baricadr/baricadr)
 
 Baricadr is a small application designed to:
 
@@ -115,7 +116,7 @@ Don't forget to set the `SECRET_KEYS` option to a random value for security (and
 
 There are 3 run mode for baricadr: `dev`, `test` and `prod`.
 
-To enable development mode you should set the `BARICADR_RUN_MODE` environment variable to `dev`. It is set by default in the development docker-compose.yml file. Among other things it will display more logs and perform live reload of modified code.
+To enable development mode you should set the `BARICADR_RUN_MODE` environment variable to `dev`. It is set by default in the development `docker-compose.dev.yml` file. Among other things it will display more logs and perform live reload of modified code.
 
 This variable can also be set to `test` or `prod` values. The default is `prod`.
 
@@ -147,7 +148,7 @@ You need to write a yaml file containing the list of repositories that you wish 
     chown_gid: 9876  # When pulling files, change owner to specified group id (default: the user running baricadr, root)
 ```
 
-You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development docker-compose.yml file
+You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development `docker-compose.dev.yml` file
 
 ## Database
 
