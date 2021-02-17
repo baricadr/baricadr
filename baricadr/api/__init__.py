@@ -104,7 +104,7 @@ def __pull_or_freeze(action, request):
 
     dry_run = False
     if 'dry_run' in request.json:
-        dry_run = request.json['dry_run'].lower() in ["true", "1", "yes"]
+        dry_run = str(request.json['dry_run']).lower() in ["true", "1", "yes"]
 
     # Check if we're already touching the path
     touching_task_id = current_app.repos.is_already_touching(asked_path)

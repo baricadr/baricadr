@@ -296,9 +296,6 @@ def _merge_conf_with_env_vars(config):
     return config
 
 
-# TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
-
 # TODO proper release
 # TODO readthedocs for barique
-# TODO quay.io images
 # TODO pypi barique

@@ -5,6 +5,9 @@ x-baricadr-variables: &baricadr-variables
     BARICADR_RUN_MODE: "prod"
     BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
     TZ: "Etc/UTC"
+    MAIL_SERVER: "localhost"
+    MAIL_PORT: "25"
+    SECRET_KEY: "some_random_string_change_it"
 
 services:
     baricadr:
