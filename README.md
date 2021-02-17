@@ -265,3 +265,7 @@ When you are done, clean it and unmount it like this:
 sudo rm -rf test-data/test-fs-mountpoint/*
 sudo umount /home/abretaud/git/baricadr/test-data/test-fs-mountpoint
 ```
+
+## License
+
+Available under the MIT License
