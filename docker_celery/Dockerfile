@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-MAINTAINER "Anthony Bretaudeau <anthony.bretaudeau@inra.fr>"
+MAINTAINER "Anthony Bretaudeau <anthony.bretaudeau@inrae.fr>"
 
 ENV CELERY_BROKER_URL redis://redis:6379/0
 ENV CELERY_RESULT_BACKEND redis://redis:6379/0

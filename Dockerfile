@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-MAINTAINER "Anthony Bretaudeau <anthony.bretaudeau@inra.fr>"
+MAINTAINER "Anthony Bretaudeau <anthony.bretaudeau@inrae.fr>"
 
 COPY requirements.txt /tmp/requirements.txt
 

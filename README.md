@@ -2,6 +2,7 @@
 
 [![Lint and test](https://github.com/baricadr/baricadr/workflows/Lint%20and%20test/badge.svg)](https://github.com/baricadr/baricadr/actions)
 [![Docker Repository on Quay](https://quay.io/repository/baricadr/baricadr/status "Docker Repository on Quay")](https://quay.io/repository/baricadr/baricadr)
+[![Docker Repository on Quay](https://quay.io/repository/baricadr/baricadr-worker/status "Docker Repository on Quay")](https://quay.io/repository/baricadr/baricadr-worker)
 
 Baricadr is a small application designed to:
 
@@ -11,9 +12,7 @@ Baricadr is a small application designed to:
 
 The remote is considered to be a full remote backup of the data (but other use cases are possible).
 
-It is a prototype and not yet ready for production.
-
-It was originally designed for the BBRIC/BARIC CATI at INRA, with the AgroDataRing project.
+It was originally designed for the [BARIC CATI](https://www.cesgo.org/catibaric/) at INRAE, with the [AgroDataRing](https://datapartage.inrae.fr/Gerer/Stocker-les-donnees/AgroDataRing) project.
 
 ## Running it with Docker
 
