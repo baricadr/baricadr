@@ -17,13 +17,15 @@ Two main actions can be performed with Baricadr:
 
 One can also use Baricadr in Pull-mode only, allowing to download easily selected files from a remote server.
 
+Although we did our best to make Baricadr as safe as possible for your data, there can always remain bugs, and it can be dangerous if not configured properly. **Use at your own risk**.
+
 Baricadr was originally designed for the [BARIC CATI](https://www.cesgo.org/catibaric/) at INRAE, with the [AgroDataRing](https://datapartage.inrae.fr/Gerer/Stocker-les-donnees/AgroDataRing) project.
 
 ## Usage
 
 Baricadr runs as a web service, exposing a very simple REST API.
 
-The easiest way to use Baricadr is to use the corresponding [python module](https://github.com/baricadr/baricadr_cli) which provides a simple CLI (`barique`) and a python interface to interact with the REST API.
+The easiest way to use Baricadr is to use the corresponding [python module](https://github.com/baricadr/barique) which provides a simple CLI (`barique`) and a python interface to interact with the REST API.
 
 Baricadr can perform 2 main actions to files:
 
@@ -33,7 +35,7 @@ Baricadr can perform 2 main actions to files:
 Install and initialize the module:
 
 ```bash
-$ pip install baricadr
+$ pip install barique
 
 # On first use you'll need to create a config file to connect to the server, just run:
 
@@ -104,7 +106,7 @@ With pull-id = the return of the pull POST call above
 
 ## What will it do to my data?
 
-Baricadr will never touch remote data.
+Baricadr will never touch remote data. We consider that remote data is a backup, and that it is **safe** (ideally replicated elsewhere and regularly tested).
 
 To allow freezing, Baricadr needs (and will refuse to work without) support for file access time (atime) on the partition containing the data to manage. You can still use the pull mechanism of Baricadr if atime is not supported.
 
