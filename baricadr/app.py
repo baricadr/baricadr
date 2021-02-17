@@ -294,8 +294,3 @@ def _merge_conf_with_env_vars(config):
             config[key] = envval
 
     return config
-
-
-# TODO proper release
-# TODO readthedocs for barique
-# TODO pypi barique
