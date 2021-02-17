@@ -1,0 +1,44 @@
+# This is an example of production docker-compose.yml, you'll need to adapt to your system
+version: "3.7"
+
+x-baricadr-variables: &baricadr-variables
+    BARICADR_RUN_MODE: "prod"
+    BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
+    TZ: "Etc/UTC"
+
+services:
+    baricadr:
+        image: quay.io/baricadr/baricadr:latest
+        ports:
+            - 9100:80
+        depends_on:
+            - redis
+            - db
+        environment: *baricadr-variables
+        volumes:
+            - ./repos.yml:/etc/baricadr/repos.yml:ro
+            - /dir/containing/data/to/be/managed/by/baricadr/:/dir/containing/data/to/be/managed/by/baricadr/
+            - ./volumes/to/backup/task_logs/:/var/log/baricadr/tasks/
+
+    worker:
+        image: quay.io/baricadr/baricadr-worker:latest
+        depends_on:
+            - redis
+            - db
+        entrypoint: python3
+        command: /opt/celery_dev_launch.py
+        environment: *baricadr-variables
+        volumes:
+            - ./repos.yml:/etc/baricadr/repos.yml:ro
+            - /dir/containing/data/to/be/managed/by/baricadr/:/dir/containing/data/to/be/managed/by/baricadr/
+            - ./volumes/to/backup/task_logs/:/var/log/baricadr/tasks/
+
+    redis:
+        image: redis:4.0
+
+    db:
+        image: postgres:11-alpine
+        environment:
+          POSTGRES_PASSWORD: postgres
+        volumes:
+          - ./volumes/to/backup/postgres_db/:/var/lib/postgresql/data/

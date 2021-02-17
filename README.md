@@ -103,15 +103,27 @@ Symlinks are supported as long as they were created on the remote using rclone `
 
 ## Configuring
 
+### Application configuration
+
+Baricadr main configuration is written in a single config file that Baricadr expects to find at `/baricadr/local.cfg` inside the container. A template for this file is available in [local.example.cfg](./local.example.cfg). You are supposed to create your own `local.cfg` file based on the template, and mount it to `/baricadr/local.cfg`.
+
+All configuration options can also be overriden using environment variables (same names as in `local.cfg`).
+
+Don't forget to set the `SECRET_KEYS` option to a random value for security (and keep it private).
+
+#### Run modes
+
 There are 3 run mode for baricadr: `dev`, `test` and `prod`.
 
-To enable development mode you should set the `BARICADR_RUN_MODE` environment variable to `dev`. It is set by default in the development docker-compose.yml file. Among other things it will display more logs.
+To enable development mode you should set the `BARICADR_RUN_MODE` environment variable to `dev`. It is set by default in the development docker-compose.yml file. Among other things it will display more logs and perform live reload of modified code.
 
-This variable can be set to `test` or `prod` values. The default is `prod`.
+This variable can also be set to `test` or `prod` values. The default is `prod`.
 
 To override the configuration of the selected run mode, you need to create a file `local.cfg`, by copying `local.example.cfg`. Every config written in this file will override the default one.
 
-You should write a yaml file containing the list of repositories managed by Baricadr. Use this syntax:
+### Repositories configuration
+
+You need to write a yaml file containing the list of repositories that you wish to be managed by Baricadr. Use this syntax:
 
 ```
 /some/local/path:

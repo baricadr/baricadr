@@ -1,5 +1,5 @@
 # This is a development docker-compose.yml, don't use this one in production
-version: "3.4"
+version: "3.7"
 
 x-baricadr-variables: &baricadr-variables
     BARICADR_RUN_MODE: "dev"

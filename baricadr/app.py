@@ -22,6 +22,34 @@ BLUEPRINTS = (
     api,
 )
 
+CONFIG_KEYS = (
+    'SECRET_KEY',
+    'BARICADR_REPOS_CONF',
+    'MAIL_SENDER',
+    'MAIL_ADMIN',
+    'CLEANUP_ZOMBIES_INTERVAL',
+    'CLEANUP_INTERVAL',
+    'CLEANUP_AGE',
+    'TASK_LOG_DIR',
+    'DEBUG',
+    'TESTING',
+    'BROKER_TRANSPORT',
+    'CELERY_BROKER_URL',
+    'CELERY_RESULT_BACKEND',
+    'CELERY_TASK_SERIALIZER',
+    'CELERY_DISABLE_RATE_LIMITS',
+    'CELERY_ACCEPT_CONTENT',
+    'SQLALCHEMY_DATABASE_URI',
+    'SQLALCHEMY_ECHO',
+    'SQLALCHEMY_TRACK_MODIFICATIONS',
+    'MAIL_SERVER',
+    'MAIL_PORT',
+    'MAIL_USE_SSL',
+    'MAIL_SENDER',
+    'MAIL_SUPPRESS_SEND',
+    'LOG_FOLDER',
+)
+
 
 def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None, is_worker=False):
     app = Flask(app_name,
@@ -53,26 +81,29 @@ def create_app(config=None, app_name='baricadr', blueprints=None, run_mode=None,
         if config:
             app.config.from_pyfile(config)
 
+        app.config = _merge_conf_with_env_vars(app.config)
+
+        # Clean some config values / use default when missing
         if 'CLEANUP_ZOMBIES_INTERVAL' in app.config:
             app.config['CLEANUP_ZOMBIES_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_ZOMBIES_INTERVAL'), 3600)
+
         if 'CLEANUP_INTERVAL' in app.config:
             app.config['CLEANUP_INTERVAL'] = _get_int_value(app.config.get('CLEANUP_INTERVAL'), 21600)
 
         if 'TASK_LOG_DIR' in app.config:
             app.config['TASK_LOG_DIR'] = os.path.abspath(app.config['TASK_LOG_DIR'])
         else:
-            app.config['TASK_LOG_DIR'] = os.path.abspath(os.getenv('TASK_LOG_DIR', '/var/log/baricadr/tasks/'))
+            app.config['TASK_LOG_DIR'] = '/var/log/baricadr/tasks/'
+
+        if 'BARICADR_REPOS_CONF' not in app.config:
+            app.config['BARICADR_REPOS_CONF'] = '/etc/baricadr/repos.yml'
 
         if app.is_worker:
             os.makedirs(app.config['TASK_LOG_DIR'], exist_ok=True)
 
         # Load the list of baricadr repositories
         app.backends = backends.Backends()
-        if 'BARICADR_REPOS_CONF' in app.config:
-            repos_file = app.config['BARICADR_REPOS_CONF']
-        else:
-            repos_file = os.getenv('BARICADR_REPOS_CONF', '/etc/baricadr/repos.yml')
-        app.repos = Repos(repos_file, app.backends)
+        app.repos = Repos(app.config['BARICADR_REPOS_CONF'], app.backends)
 
         if blueprints is None:
             blueprints = BLUEPRINTS
@@ -253,6 +284,16 @@ def _get_int_value(config_val, default):
     except ValueError:
         config_val = default
     return config_val
+
+
+def _merge_conf_with_env_vars(config):
+
+    for key in CONFIG_KEYS:
+        envval = os.getenv(key)
+        if envval is not None:
+            config[key] = envval
+
+    return config
 
 
 # TODO document how to run backups: disable --delete mode!! + how to handle moved data (not a problem with archive)?
