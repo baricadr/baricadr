@@ -93,7 +93,7 @@ def __pull_or_freeze(action, request):
         return jsonify({'error': 'No Celery worker available to process the request'}), 400
 
     email = None
-    if 'email' in request.json:
+    if 'email' in request.json and request.json['email']:
         email = request.json['email']
 
         try:
