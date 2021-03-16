@@ -21,7 +21,7 @@ RUN apk add --no-cache \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
     pip3 install --upgrade pip setuptools && \
-    apk add --no-cache --virtual .build-deps gcc musl-dev python3-dev postgresql-dev && \
+    apk add --no-cache --virtual .build-deps gcc g++ musl-dev python3-dev postgresql-dev && \
     pip3 install -r /tmp/requirements.txt && \
     apk --purge del .build-deps && \
     rm /etc/nginx/conf.d/default.conf && \
