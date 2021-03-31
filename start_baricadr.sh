@@ -25,14 +25,16 @@ fi
 
 # Make sure log dirs exist
 mkdir -p "$LOG_FOLDER"
-chown -R nginx:nginx "$LOG_FOLDER"
 mkdir -p "$TASK_LOG_DIR"
 
 # Make sure the db schema is up-to-date
 flask db upgrade
 
+# Make sure permissions are ok
+chown -R nginx:nginx "$LOG_FOLDER"
+
 # Schedule a zombie killer in a few seconds
 atd
-echo "sleep 10; curl http://localhost/zombie" | at now
+echo "sleep 60; curl http://localhost/zombie" | at now
 
 /usr/bin/supervisord
