@@ -45,4 +45,7 @@ WORKDIR /baricadr
 
 COPY start_baricadr.sh /start_baricadr.sh
 
+ENV LOG_FOLDER="/var/log/baricadr/"
+ENV TASK_LOG_DIR="/var/log/baricadr/tasks/"
+
 ENTRYPOINT "/start_baricadr.sh"
