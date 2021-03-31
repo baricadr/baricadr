@@ -28,8 +28,6 @@ services:
         depends_on:
             - redis
             - db
-        entrypoint: python3
-        command: /opt/celery_dev_launch.py
         environment: *baricadr-variables
         volumes:
             - ./repos.yml:/etc/baricadr/repos.yml:ro
