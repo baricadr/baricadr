@@ -196,6 +196,7 @@ You need to write a yaml file containing the list of repositories that you wish 
     auto_freeze_interval: 7  # Delay (in days) between each regular automated freeze task (ignored if auto_freeze is False)
     chown_uid: 9876  # When pulling files, change owner to specified user id (default: the user running baricadr, root)
     chown_gid: 9876  # When pulling files, change owner to specified group id (default: the user running baricadr, root)
+    disable_atime_test: False  # Set this to True to prevent Baricadr from checking if repo is really freezable by playing with atime. Use at your own risk and when you're sure atime is really updated for this volume (possible use cases: volume mounted with relatime option, or nfs mount with cache). (default: False)
 ```
 
 You must set the `BARICADR_REPOS_CONF` environment variable to the path to this yaml file, or define it in the `local.cfg` config file. A test one is used by default in the development `docker-compose.dev.yml` file

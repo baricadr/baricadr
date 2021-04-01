@@ -62,9 +62,15 @@ class Repo():
         # Default behaviour should be non-freeze
         self.freezable = False
         if 'freezable' in conf and conf['freezable'] is True:
+
+            self.disable_atime_test = False
+            if 'disable_atime_test' in conf and conf['disable_atime_test'] is True:
+                self.disable_atime_test = True
+
             # Skip if not freezable
-            if not perms['freezable']:
+            if not perms['freezable'] and not self.disable_atime_test:
                 raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
+
             # If freezable, set freeze_age
             self.freezable = True
             self.freeze_age = 180
@@ -93,7 +99,6 @@ class Repo():
                         raise ValueError("Malformed repository definition, auto_freeze_interval must be an integer in days >1 and <10000 in '%s'" % conf)
 
                 self.auto_freeze_interval = conf['auto_freeze_interval']
-
         self.backend = current_app.backends.get_by_name(conf['backend'], conf)
 
     def is_in_repo(self, path):

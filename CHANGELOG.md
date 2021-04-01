@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix permission denied on LOG_FOLDER
 - Adjust docker-compose.prod.yml
 
+### Added
+
+- `disable_atime_test` option for cases where atime testing is not reliable
+
 ## [0.1.1] - 2021-03-17
 
 ### Changed
