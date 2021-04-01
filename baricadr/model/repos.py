@@ -68,8 +68,11 @@ class Repo():
                 self.disable_atime_test = True
 
             # Skip if not freezable
-            if not perms['freezable'] and not self.disable_atime_test:
-                raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
+            if not perms['freezable']:
+                if self.disable_atime_test:
+                    current_app.logger.warning("The local path '%s' does not support atime, marking as freezable anyway because disable_atime_test is set." % local_path)
+                else:
+                    raise ValueError("Malformed repository definition for local path '%s', this path does not support atime" % local_path)
 
             # If freezable, set freeze_age
             self.freezable = True
