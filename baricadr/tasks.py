@@ -28,7 +28,9 @@ def on_failure(self, exc, task_id, args, kwargs, einfo):
     if len(args) > 2 and args[1] and len(args[1]) > 0:
         body = """Hello,
 One of your BARICADR {task} task on path '{path}' failed, with the following error:
+
 {error}
+
 Contact the administrator for more info.
 Cheers
 """
