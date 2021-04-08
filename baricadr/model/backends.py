@@ -71,8 +71,8 @@ class RcloneBackend(Backend):
         retcode = p.returncode
         obscure_password = output.decode('ascii').strip('\n')
         if retcode != 0:
-            current_app.logger.error(output)
-            current_app.logger.error(err)
+            current_app.logger.warning(output)
+            current_app.logger.warning(err)
             raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't obscurify password (stderr: " + str(err) + ")")
 
         return obscure_password
@@ -114,11 +114,11 @@ class RcloneBackend(Backend):
         try:
             json_output = json.loads(output.decode('ascii'))
         except json.decoder.JSONDecodeError:
-            current_app.logger.error('Failed to parse json output from rclone lsjson: %s' % output.decode('ascii'))
+            current_app.logger.warning('Failed to parse json output from rclone lsjson: %s' % output.decode('ascii'))
 
         if retcode != 0:
-            current_app.logger.error(output)
-            current_app.logger.error(err)
+            current_app.logger.warning(output)
+            current_app.logger.warning(err)
             raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
 
         current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
