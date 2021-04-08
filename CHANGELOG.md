@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix permission denied on LOG_FOLDER
 - Adjust docker-compose.prod.yml
+- Fix SQL connection problem
+- Fix task logs being mixed
 
 ### Added
 
