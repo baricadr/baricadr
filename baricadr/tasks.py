@@ -78,9 +78,6 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=
     repo = app.repos.get_repo(asked_path)
 
     # Temporary logger
-    tmp_logger_id = "task_{}_{}".format(type, task_id)
-    logger = logging.getLogger(tmp_logger_id)
-
     logfile = dbtask.logfile_path(app, task_id)
     task_file_handler = logging.FileHandler(logfile)
     task_file_handler.setLevel(logging.INFO)
@@ -88,7 +85,7 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=
         '%(asctime)s %(levelname)s: %(message)s '
         '[in %(pathname)s:%(lineno)d]')
     )
-    logger.addHandler(task_file_handler)
+    app.logger.addHandler(task_file_handler)
 
     modified = None
     if type == "pull":
@@ -96,10 +93,7 @@ def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=
     else:
         modified = repo.freeze(asked_path, dry_run=dry_run)
 
-    logger.removeHandler(task_file_handler)
-    del logger
-    if tmp_logger_id in logging.Logger.manager.loggerDict:
-        del logging.Logger.manager.loggerDict[tmp_logger_id]
+    app.logger.removeHandler(task_file_handler)
 
     dbtask.status = 'finished'
 
