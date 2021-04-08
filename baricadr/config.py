@@ -15,6 +15,9 @@ class BaseConfig(object):
 
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+    }
 
     LOG_FOLDER = "/var/log/baricadr/"
 
