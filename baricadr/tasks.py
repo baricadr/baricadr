@@ -9,7 +9,6 @@ from baricadr.extensions import db, mail
 from baricadr.utils import celery_task_is_in_queue, get_celery_tasks, human_readable_size
 
 from celery.signals import task_postrun, task_revoked
-from celery.utils.log import get_task_logger
 
 from flask_mail import Message
 
@@ -46,7 +45,7 @@ Cheers
     db.session.commit()
 
 
-def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], dry_run=False, sleep=0):
+def run_repo_action(self, type, path, task_id, email=None, wait_for=[], dry_run=False, sleep=0):
 
     # Wait a bit in case the tasks begin just before it is recorded in the db
     time.sleep(2)
@@ -62,7 +61,7 @@ def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], 
     time.sleep(sleep)
 
     if wait_for:
-        logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
+        app.logger.debug("Waiting for tasks %s before %s '%s'" % (wait_for, vocab[type], path))
         for wait_id in wait_for:
             while celery_task_is_in_queue(app.celery, wait_id):
                 time.sleep(10)
@@ -71,7 +70,7 @@ def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], 
     dbtask.status = vocab[type]
     db.session.commit()
 
-    logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
+    app.logger.debug("%s path '%s'" % (vocab[type].capitalize(), path))
     self.update_state(state='PROGRESS')
 
     # We don't need to resolve symlinks, if the repo is symlinks, it is checked at startup
@@ -79,6 +78,9 @@ def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], 
     repo = app.repos.get_repo(asked_path)
 
     # Temporary logger
+    tmp_logger_id = "task_{}_{}".format(type, task_id)
+    logger = logging.getLogger(tmp_logger_id)
+
     logfile = dbtask.logfile_path(app, task_id)
     task_file_handler = logging.FileHandler(logfile)
     task_file_handler.setLevel(logging.INFO)
@@ -95,6 +97,9 @@ def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], 
         modified = repo.freeze(asked_path, dry_run=dry_run)
 
     logger.removeHandler(task_file_handler)
+    del logger
+    if tmp_logger_id in logging.Logger.manager.loggerDict:
+        del logging.Logger.manager.loggerDict[tmp_logger_id]
 
     dbtask.status = 'finished'
 
@@ -124,12 +129,12 @@ def run_repo_action(self, type, path, task_id, logger, email=None, wait_for=[], 
 
 @celery.task(bind=True, name="pull", on_failure=on_failure)
 def pull(self, path, email=None, wait_for=[], dry_run=False, sleep=0):
-    run_repo_action(self, 'pull', path, pull.request.id, get_task_logger(__name__), email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
+    run_repo_action(self, 'pull', path, pull.request.id, email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
 
 
 @celery.task(bind=True, name="freeze", on_failure=on_failure)
 def freeze(self, path, email=None, wait_for=[], dry_run=False, sleep=0):
-    run_repo_action(self, 'freeze', path, freeze.request.id, get_task_logger(__name__), email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
+    run_repo_action(self, 'freeze', path, freeze.request.id, email=email, wait_for=wait_for, dry_run=dry_run, sleep=sleep)
 
 
 @celery.task(bind=True, name="cleanup_zombie_tasks")
@@ -143,8 +148,6 @@ def cleanup_zombie_tasks(self):
 
     self.update_state(state='PROGRESS')
 
-    logger = get_task_logger(__name__)
-
     num = 0
     # Filter tasks not yet finished/failed
     running_tasks = BaricadrTask.query.filter(BaricadrTask.status.notin_(["failed", "finished"]))
@@ -153,12 +156,12 @@ def cleanup_zombie_tasks(self):
            and rt.task_id not in cel_tasks['reserved_tasks'] \
            and rt.task_id not in cel_tasks['scheduled_tasks']:
 
-            logger.debug("Found zombie state for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
+            app.logger.debug("Found zombie state for task '%s' %s on path '%s'" % (rt.task_id, rt.type, rt.path))
             rt.status = 'failed'
             rt.finished = datetime.utcnow()
             num += 1
         db.session.commit()
-    logger.debug("%s zombie tasks killed (%s remaining)" % (num, running_tasks.count() - num))
+    app.logger.debug("%s zombie tasks killed (%s remaining)" % (num, running_tasks.count() - num))
 
 
 @celery.task(bind=True, name="cleanup_tasks")
@@ -170,20 +173,18 @@ def cleanup_tasks(self, cleanup_age):
     max_date = datetime.utcnow() - timedelta(seconds=cleanup_age)
     finished_tasks = BaricadrTask.query.filter(BaricadrTask.status.in_(["failed", "finished"]), BaricadrTask.finished < max_date)
 
-    logger = get_task_logger(__name__)
-
     num = 0
     for ft in finished_tasks:
         # Delete log file
         logfile = ft.logfile_path(app, ft.task_id)
         if os.path.exists(logfile):
             os.remove(logfile)
-        logger.debug("Clearing finished task %s with status %s (type = %s, path = %s)'" % (ft.task_id, ft.status, ft.type, ft.path))
+        app.logger.debug("Clearing finished task %s with status %s (type = %s, path = %s)'" % (ft.task_id, ft.status, ft.type, ft.path))
         db.session.delete(ft)
         db.session.commit()
         num += 1
 
-    logger.debug("Cleared %s finished tasks" % (num))
+    app.logger.debug("Cleared %s finished tasks" % (num))
     self.update_state(state='PROGRESS')
 
 
