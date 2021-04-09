@@ -11,6 +11,9 @@ class BaseConfig(object):
     CELERY_TASK_SERIALIZER = 'json'
     CELERY_DISABLE_RATE_LIMITS = True
     CELERY_ACCEPT_CONTENT = ['json', ]
+
+    # We set this to 1 to avoid some rare problems of logs being mixed between tasks.
+    # But baricadr is able to support higher values, and tests are run with higher value.
     CELERYD_CONCURRENCY = 1
 
     SQLALCHEMY_ECHO = False
