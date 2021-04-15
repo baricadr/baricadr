@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.2] - 2021-04-15
+
+### Changed
+
 - Fix permission denied on LOG_FOLDER
 - Adjust docker-compose.prod.yml
 - Fix SQL connection problem
