@@ -58,14 +58,14 @@ class TestApiPull(BaricadrTestCase):
 
         repo_file = '/repos/test_repo/subdir/subfile.txt'
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
         self.pull_and_wait(client, repo_file)
 
-        assert os.path.exists(repo_file + '/subfile.txt')
+        assert os.path.exists(repo_file)
 
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
     def test_pull_single_non_excluded(self, app, client):
         """
@@ -74,30 +74,30 @@ class TestApiPull(BaricadrTestCase):
 
         repo_file = '/repos/test_repo_exclude/subdir/subfile.txt'
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
         self.pull_and_wait(client, repo_file)
 
-        assert os.path.exists(repo_file + '/subfile.txt')
+        assert os.path.exists(repo_file)
 
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
     def test_pull_single_excluded(self, app, client):
         """
         Try to pull a file in normal conditions, with excluded file
         """
 
-        repo_file = '/repos/test_repo_exclude/subdir/subfile.txt'
+        repo_file = '/repos/test_repo_exclude/subdir/subsubdir/poutrelle.xml'
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
         self.pull_and_wait(client, repo_file)
 
-        assert os.path.exists(repo_file + '/subsubdir/poutrelle.xml')
+        assert os.path.exists(repo_file)
 
         if os.path.exists(repo_file):
-            shutil.rmtree(repo_file)
+            os.remove(repo_file)
 
     def test_pull_rclone_symlinks(self, app, client):
         """

@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import os
 import re
@@ -238,7 +239,8 @@ class SftpBackend(RcloneBackend):
         tempRcloneConfig = self.temp_rclone_config()
 
         rclone_cmd = 'copy'
-        if self.remote_is_single(repo, path):
+        is_single = self.remote_is_single(repo, path)
+        if is_single:
             rclone_cmd = 'copyto'
 
         rel_path = repo.relative_path(path)
@@ -250,7 +252,13 @@ class SftpBackend(RcloneBackend):
         if repo.exclude:
             excludes = repo.exclude.split(',')
             for ex in excludes:
-                ex_options += " --exclude '%s'" % ex.strip()
+                if not is_single:
+                    ex_options += " --exclude '%s'" % ex.strip()
+                else:
+                    # rclone copyto does not accept --exclude option for single files
+                    if fnmatch.filter(rel_path, ex):
+                        current_app.logger.info("Single file %s is in exclude list, skipping rclone call, nothing to do" % (rel_path))
+                        return self.parse_copy_output("", dry_run)
 
         if dry_run:
             ex_options += " --dry-run"
