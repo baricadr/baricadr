@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.3] - 2021-04-28
+
+### Changed
+
+- Fix error when pulling a single file in a repo with excludes
+
 ## [0.1.2] - 2021-04-15
 
 ### Changed

@@ -59,3 +59,5 @@ supervisord.pid
 
 test-data/test-fs
 test-data/test-fs-mountpoint
+
+docker-compose.yml
