@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.4] - 2021-04-29
+
+### Changed
+
+- Fix copied file listing from rclone stderr
+
+### Changed
+
 ## [0.1.3] - 2021-04-28
 
 ### Changed

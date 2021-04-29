@@ -202,7 +202,7 @@ class RcloneBackend(Backend):
         if dry_run:
             copied = re.findall(r'NOTICE: ([\w\-. /]+): Skipped copy as --dry-run is set', stderr.decode('utf-8'))
         else:
-            copied = re.findall(r'INFO  : ([\w\-. /]+): Copied', stderr.decode('utf-8'))
+            copied = re.findall(r'INFO  : ([\w\-. /]+): (Multi-thread )?Copied', stderr.decode('utf-8'))
 
         # Look for transferred bytes
         m = re.search(r'Transferred: .+/ ([0-9.]+) ([A-Z])?Bytes', stderr.decode('utf-8'))
