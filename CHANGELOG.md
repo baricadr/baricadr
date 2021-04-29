@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.1.5] - 2021-04-29
+
+### Changed
+
+- Fix decoding of utf-8 filenames
+
 ## [0.1.4] - 2021-04-29
 
 ### Changed

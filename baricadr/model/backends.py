@@ -113,9 +113,9 @@ class RcloneBackend(Backend):
         output, err = p.communicate()
         retcode = p.returncode
         try:
-            json_output = json.loads(output.decode('ascii'))
+            json_output = json.loads(output.decode('utf-8'))
         except json.decoder.JSONDecodeError:
-            current_app.logger.warning('Failed to parse json output from rclone lsjson: %s' % output.decode('ascii'))
+            current_app.logger.warning('Failed to parse json output from rclone lsjson: %s' % output.decode('utf-8'))
 
         if retcode != 0:
             current_app.logger.warning(output)
