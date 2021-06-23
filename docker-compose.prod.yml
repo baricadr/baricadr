@@ -20,7 +20,7 @@ services:
         environment: *baricadr-variables
         volumes:
             - ./repos.yml:/etc/baricadr/repos.yml:ro
-            - /dir/containing/data/to/be/managed/by/baricadr/:/dir/containing/data/to/be/managed/by/baricadr/
+            - /dir/containing/data/to/be/managed/by/baricadr/:/dir/containing/data/to/be/managed/by/baricadr/:ro
             - ./volumes/to/backup/task_logs/:/var/log/baricadr/tasks/
 
     worker:

@@ -231,7 +231,6 @@ class Repo():
     def _check_perms(self):
         if not current_app.is_worker:
             # The web app doesn't need to have write access, nor to check if the repo is freezable
-            # The web forker thread is "nginx", not root, so it cannot write anyway.
             current_app.logger.debug("Web process, skipping perms checks for repo %s" % (self.local_path))
             return {"writable": True, "freezable": True}
 

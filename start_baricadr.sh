@@ -31,7 +31,7 @@ mkdir -p "$TASK_LOG_DIR"
 flask db upgrade
 
 # Make sure permissions are ok
-chown -R nginx:nginx "$LOG_FOLDER"
+chown -R root:root "$LOG_FOLDER"
 
 # Schedule a zombie killer in a few seconds
 atd
