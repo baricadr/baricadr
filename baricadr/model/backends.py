@@ -138,6 +138,9 @@ class RcloneBackend(Backend):
                 else:
                     file_path = entry['Path']
 
+                if file_path.endswith('.rclonelink'):
+                    file_path = file_path[:-11]
+
                 if full:
                     entry['Path'] = file_path
                     remote_list.append(entry)
