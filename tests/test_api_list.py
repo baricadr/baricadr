@@ -86,8 +86,10 @@ class TestApiList(BaricadrTestCase):
         ]
 
         keys = ["IsDir", "MimeType", "ModTime", "Name", "Size", "Path"]
+        received = []
         for file in response.json:
             assert all(key in file for key in keys)
             file.pop('ModTime', None)
+            received.append(file)
 
-        assert sorted(expected, key=lambda k: k['Path']) == sorted(response.json, key=lambda k: k['Path'])
+        assert sorted(expected, key=lambda k: k['Path']) == sorted(received, key=lambda k: k['Path'])
