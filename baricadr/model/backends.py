@@ -122,7 +122,9 @@ class RcloneBackend(Backend):
             current_app.logger.warning(err)
             raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
 
-        current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
+        ls_log = str(json_output)
+        ls_log = (ls_log[:15000] + '...') if len(ls_log) > 15000 else ls_log
+        current_app.logger.info('Raw output from rclone lsjson: %s' % ls_log)
 
         path_rel_prefix = rel_path
         if len(json_output) == 1 and not json_output[0]['IsDir']:
