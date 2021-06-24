@@ -17,7 +17,7 @@ class TestReposPull(BaricadrTestCase):
         if os.path.exists(self.testing_repo):
             shutil.rmtree(self.testing_repo)
 
-    def test_pull_success(self, app):
+    def test_pull_sftp_success(self, app):
 
         conf = {
             self.testing_repo: {
@@ -27,6 +27,38 @@ class TestReposPull(BaricadrTestCase):
                 'password': 'pass',
                 'freeze_age': 3,
                 'freezable': True
+            }
+        }
+
+        app.repos.read_conf_from_str(str(conf))
+
+        repo = app.repos.get_repo(self.testing_repo)
+        pull_res = repo.pull(self.testing_repo)
+
+        assert len(pull_res) == 2
+        assert sorted(pull_res[0]) == sorted([
+            'subdir/subfile.txt',
+            'file.txt',
+            'file2.txt',
+            'subdir/subsubdir2/poutrelle.xml',
+            'subdir/subsubdir2/subsubfile.txt',
+            'subdir/subsubdir2/subsubsubdir/subsubsubdir2/a file',
+            'subdir/subsubdir/subsubfile.txt',
+            'subdir/subsubdir/poutrelle.tsv',
+            'subdir/subsubdir/poutrelle.xml'
+        ])
+        assert pull_res[1] == 126
+
+    def test_pull_s3_success(self, app):
+
+        conf = {
+            self.testing_repo: {
+                'backend': 's3',
+                'provider': 'Ceph',
+                'endpoint': 'http://minio:9000/',
+                'path': 'remote-test-repo/test-repo/',
+                'access_key_id': 'admin',
+                'secret_access_key': 'password'
             }
         }
 
