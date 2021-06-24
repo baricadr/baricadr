@@ -148,7 +148,9 @@ class RcloneBackend(Backend):
         if missing:
             remote_list = self.missing_list(path, remote_list, max_depth, repo, full)
 
-        current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
+        lsr_log = str(remote_list)
+        lsr_log = (lsr_log[:15000] + '...') if len(lsr_log) > 15000 else lsr_log
+        current_app.logger.info('Parsed remote listing from rclone: %s' % lsr_log)
 
         return remote_list
 
