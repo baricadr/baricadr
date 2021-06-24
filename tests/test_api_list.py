@@ -99,7 +99,7 @@ class TestApiList(BaricadrTestCase):
         assert sorted(expected, key=lambda k: k['Path']) == sorted(received, key=lambda k: k['Path'])
 
 
-class TestApiLists3(TestApiList):
+class TestApiListS3(TestApiList):
     """
     Same tests, but with S3
     """
