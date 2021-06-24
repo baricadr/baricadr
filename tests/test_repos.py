@@ -26,14 +26,14 @@ class TestRepos(BaricadrTestCase):
     def test_overlap(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             },
             '/foo/bar/some/thing': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             }
@@ -45,14 +45,14 @@ class TestRepos(BaricadrTestCase):
     def test_overlap_reverse(self, app):
         conf = {
             '/foo/bar/some/thing': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             },
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             }
@@ -72,14 +72,14 @@ class TestRepos(BaricadrTestCase):
 
         conf = {
             '/foo/bar/': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             },
             lnk_dst: {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx'
             }
@@ -97,7 +97,7 @@ class TestRepos(BaricadrTestCase):
             conf = {
                 local_path_not_exist: {
                     'backend': 'sftp',
-                    'url': 'sftp:test-repo/',
+                    'url': 'host:sftp:test-repo/',
                     'user': 'foo',
                     'password': 'pass'
                 }
@@ -112,8 +112,8 @@ class TestRepos(BaricadrTestCase):
     def test_freeze_age_conf(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'freezable': True,
@@ -128,8 +128,8 @@ class TestRepos(BaricadrTestCase):
     def test_freeze_age_conf_str(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'freezable': True,
@@ -143,8 +143,8 @@ class TestRepos(BaricadrTestCase):
     def test_freeze_age_conf_none(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'freezable': True
@@ -158,8 +158,8 @@ class TestRepos(BaricadrTestCase):
     def test_freeze_age_conf_small(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'freezable': True,
@@ -173,8 +173,8 @@ class TestRepos(BaricadrTestCase):
     def test_freeze_age_conf_big(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'freezable': True,
@@ -188,8 +188,8 @@ class TestRepos(BaricadrTestCase):
     def test_chown_uid_conf(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'chown_uid': 4586,
@@ -203,8 +203,8 @@ class TestRepos(BaricadrTestCase):
     def test_chown_uid_conf_too_big(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'chown_uid': 100000,
@@ -217,8 +217,8 @@ class TestRepos(BaricadrTestCase):
     def test_chown_gid_conf(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'chown_gid': 4586,
@@ -232,8 +232,8 @@ class TestRepos(BaricadrTestCase):
     def test_chown_gid_conf_too_big(self, app):
         conf = {
             '/foo/bar': {
-                'backend': 's3',
-                'url': 'google',
+                'backend': 'sftp',
+                'url': 'host:google',
                 'user': 'someone',
                 'password': 'xxxxx',
                 'chown_gid': 100000,
