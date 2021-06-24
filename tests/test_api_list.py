@@ -104,5 +104,5 @@ class TestApiListS3(TestApiList):
     Same tests, but with S3
     """
 
-    repo_root = "/repos/another/local/path/s3/"
+    repo_root = "/repos/test_repo_s3/"
     expected_mimetype = "text/plain"
