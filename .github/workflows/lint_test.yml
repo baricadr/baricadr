@@ -34,6 +34,8 @@ jobs:
         docker-compose -f docker-compose.dev.yml up -d
         sleep 15
         docker-compose -f docker-compose.dev.yml logs
+    - name: Bootstrap S3 test server
+      run: ./test-data/bootstrap_minio.sh
     - name: Run tests
       run: |
         docker-compose -f docker-compose.dev.yml exec -T baricadr pytest -v --log-cli-level debug

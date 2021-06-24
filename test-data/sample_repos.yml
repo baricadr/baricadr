@@ -5,11 +5,13 @@
     password: pass
     freezable: True
 
-/repos/another/local/path:
+/repos/another/local/path/s3/:
     backend: s3
-    url: google
-    user: someone
-    password: xxxxx
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
     freezable: True
 
 /repos/test_repo/:
