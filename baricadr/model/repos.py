@@ -133,7 +133,7 @@ class Repo():
     def touch_atime(self, path):
         # Touch all pulled files to set atime to now (but not mtime)
         current_app.logger.info("Setting atime to path '%s'" % path)
-        if self.backend.remote_is_single(self, path):
+        if os.path.isfile(path):
             os.utime(path, (time.time(), os.lstat(path).st_mtime), follow_symlinks=False)
         else:
             for root, subdirs, files in os.walk(path):
@@ -144,7 +144,7 @@ class Repo():
     def set_owner(self, path):
         if self.chown_uid is not None or self.chown_gid is not None:
             current_app.logger.info("Changing owner of path '%s'" % path)
-            if self.backend.remote_is_single(self, path):
+            if os.path.isfile(path):
                 os.chown(path, self.chown_uid if self.chown_uid is not None else -1,
                          self.chown_gid if self.chown_gid is not None else -1, follow_symlinks=False)
             else:
@@ -159,7 +159,7 @@ class Repo():
                                  self.chown_gid if self.chown_gid is not None else -1, follow_symlinks=False)
 
     def remote_is_single(self, path):
-        return self.backend.remote_is_single(self, path)
+        return self.backend.remote_path_number(self, path) == 1
 
     def relative_path(self, path):
         return path[len(self.local_path) + 1:]

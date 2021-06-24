@@ -71,13 +71,13 @@ class RcloneBackend(Backend):
 
         return obscure_password
 
-    def remote_is_single(self, repo, path):
+    def remote_path_number(self, repo, path):
         """
         Check if distant path is a single file or not
         """
 
         remote_list = self.remote_list(repo, path, max_depth=0)
-        return len(remote_list) == 1
+        return len(remote_list)
 
     def do_remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False, backend_specific_options=""):
         """
@@ -219,6 +219,56 @@ class RcloneBackend(Backend):
 
         return (copied, transferred)
 
+    def do_pull(self, repo, path, dry_run=False, backend_specific_options=""):
+        tempRcloneConfig = self.temp_rclone_config()
+
+        rclone_cmd = 'copy'
+        rpath_num = self.remote_path_number(repo, path)
+
+        if rpath_num == 0:
+            raise RuntimeError("File/directory not found on remote repository: %s" % (path))
+
+        is_single = rpath_num == 1
+        if is_single:
+            rclone_cmd = 'copyto'
+
+        rel_path = repo.relative_path(path)
+
+        src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
+        dest = "%s" % (path)
+
+        ex_options = ''
+        if repo.exclude:
+            excludes = repo.exclude.split(',')
+            for ex in excludes:
+                if not is_single:
+                    ex_options += " --exclude '%s'" % ex.strip()
+                else:
+                    # rclone copyto does not accept --exclude option for single files
+                    if fnmatch.filter(rel_path, ex):
+                        current_app.logger.info("Single file %s is in exclude list, skipping rclone call, nothing to do" % (rel_path))
+                        return self.parse_copy_output("", dry_run)
+
+        if dry_run:
+            ex_options += " --dry-run"
+
+        # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
+        cmd = "rclone %s --links --ignore-existing -vv --config '%s' '%s' '%s' %s %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, backend_specific_options, ex_options)
+        current_app.logger.info("Running command: %s" % cmd)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        retcode = p.returncode
+
+        current_app.logger.info("rclone %s exit code: %s" % (rclone_cmd, retcode))
+        current_app.logger.info("rclone %s stdout: %s" % (rclone_cmd, output))
+        current_app.logger.info("rclone %s stderr: %s" % (rclone_cmd, err))
+
+        if retcode != 0:
+            raise RuntimeError("Rclone cmd was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
+        tempRcloneConfig.close()
+
+        return self.parse_copy_output(err, dry_run)
+
 
 class SftpBackend(RcloneBackend):
     def __init__(self, conf):
@@ -263,49 +313,9 @@ class SftpBackend(RcloneBackend):
 
     def pull(self, repo, path, dry_run=False):
         obscure_password = self.obscurify_password(self.password)
-        tempRcloneConfig = self.temp_rclone_config()
+        backend_specific_options = "--sftp-user '%s' --sftp-pass '%s'" % (self.user, obscure_password)
 
-        rclone_cmd = 'copy'
-        is_single = self.remote_is_single(repo, path)
-        if is_single:
-            rclone_cmd = 'copyto'
-
-        rel_path = repo.relative_path(path)
-
-        src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
-        dest = "%s" % (path)
-
-        ex_options = ''
-        if repo.exclude:
-            excludes = repo.exclude.split(',')
-            for ex in excludes:
-                if not is_single:
-                    ex_options += " --exclude '%s'" % ex.strip()
-                else:
-                    # rclone copyto does not accept --exclude option for single files
-                    if fnmatch.filter(rel_path, ex):
-                        current_app.logger.info("Single file %s is in exclude list, skipping rclone call, nothing to do" % (rel_path))
-                        return self.parse_copy_output("", dry_run)
-
-        if dry_run:
-            ex_options += " --dry-run"
-
-        # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
-        cmd = "rclone %s --links --ignore-existing -vv --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
-        current_app.logger.info("Running command: %s" % cmd)
-        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output, err = p.communicate()
-        retcode = p.returncode
-
-        current_app.logger.info("rclone %s exit code: %s" % (rclone_cmd, retcode))
-        current_app.logger.info("rclone %s stdout: %s" % (rclone_cmd, output))
-        current_app.logger.info("rclone %s stderr: %s" % (rclone_cmd, err))
-
-        if retcode != 0:
-            raise RuntimeError("Rclone cmd was terminated by signal %s: can't copy %s (stderr: %s)" % (retcode, path, str(err)))
-        tempRcloneConfig.close()
-
-        return self.parse_copy_output(err, dry_run)
+        return self.do_pull(repo, path, dry_run, backend_specific_options)
 
 
 class S3Backend(RcloneBackend):
@@ -355,4 +365,5 @@ class S3Backend(RcloneBackend):
         return self.do_remote_list(repo, path, missing, max_depth, from_root, full)
 
     def pull(self, repo, path, dry_run=False):
-        raise NotImplementedError()
+
+        return self.do_pull(repo, path, dry_run)
