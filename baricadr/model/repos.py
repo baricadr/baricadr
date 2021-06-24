@@ -210,6 +210,10 @@ class Repo():
 
         remote_list = self.remote_list(path, max_depth=0, from_root=True, full=True)
 
+        if len(remote_list) == 0:
+            # SFTP backend throws a RuntimeError when calling remote_list(), make sure we do the same for other backends
+            raise RuntimeError("File/directory not found on remote repository: %s" % (path))
+
         freezables = self._get_freezable(path, remote_list, force)
 
         current_app.logger.info("Freezable files: %s" % freezables)

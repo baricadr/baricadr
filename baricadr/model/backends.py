@@ -226,6 +226,7 @@ class RcloneBackend(Backend):
         rpath_num = self.remote_path_number(repo, path)
 
         if rpath_num == 0:
+            # SFTP backend throws a RuntimeError when calling remote_list(), make sure we do the same for other backends
             raise RuntimeError("File/directory not found on remote repository: %s" % (path))
 
         is_single = rpath_num == 1
