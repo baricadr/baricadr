@@ -37,6 +37,7 @@ class TestApiPullSFTP(BaricadrTestCase):
 
     testing_repos = {
         "simple": "/repos/test_repo_sftp/",
+        "symlinks": "/repos/test_repo_sftp/",
         "exclude": "/repos/test_repo_exclude/",
         "exclude_multiple": "/repos/test_repo_exclude_multiple/",
         "chown": "/repos/test_repo/",
@@ -114,7 +115,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format
         """
 
-        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -142,7 +143,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format, with a preexisting symlink
         """
 
-        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -174,7 +175,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format, with a preexisting different symlink
         """
 
-        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -207,7 +208,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         In this case rclone will replace local files with remote symlinks.
         """
 
-        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -624,6 +625,7 @@ class TestApiPullS3(TestApiPullSFTP):
 
     testing_repos = {
         "simple": "/repos/test_repo_s3/",
+        "symlinks": "/repos/test_repo_s3_symlinks/",
         "exclude": "/repos/test_repo_freeze_exclude_s3/",
         "exclude_multiple": "/repos/test_repo_freeze_exclude_multiple_s3/",
     }
