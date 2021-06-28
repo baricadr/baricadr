@@ -583,3 +583,9 @@ class TestApiFreezeS3(TestApiFreezeSFTP):
         """
 
         pass
+
+    def test_freeze_race(self, app, client):
+        pass
+
+    def test_freeze_race_multiple(self, app, client):
+        pass
