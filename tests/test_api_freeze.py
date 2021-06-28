@@ -569,3 +569,17 @@ class TestApiFreezeS3(TestApiFreezeSFTP):
         "/repos/test_repo_freeze_exclude_multiple_s3/",
         "/repos/test_repo_freeze_disabled_s3/"
     ]
+
+    def test_freeze_race_subdir(self, app, client):
+        """
+        Skip this test with S3, too fast to test race conditions like this
+        """
+
+        pass
+
+    def test_freeze_race_updir(self, app, client):
+        """
+        Skip this test with S3, too fast to test race conditions like this
+        """
+
+        pass
