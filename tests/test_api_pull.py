@@ -39,6 +39,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         "simple": "/repos/test_repo_sftp/",
         "exclude": "/repos/test_repo_exclude/",
         "exclude_multiple": "/repos/test_repo_exclude_multiple/",
+        "chown": "/repos/test_repo/",
     }
 
     def test_pull_success(self, app, client):
@@ -555,7 +556,7 @@ class TestApiPullSFTP(BaricadrTestCase):
         Try to pull a dir in normal conditions and check chown
         """
 
-        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
+        repo_dir = os.path.join(self.testing_repos['chown'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -626,3 +627,12 @@ class TestApiPullS3(TestApiPullSFTP):
         "exclude": "/repos/test_repo_freeze_exclude_s3/",
         "exclude_multiple": "/repos/test_repo_freeze_exclude_multiple_s3/",
     }
+
+    def test_pull_chown(self, app, client):
+        pass
+
+    def test_pull_race(self, app, client):
+        pass
+
+    def test_pull_race_subdir(self, app, client):
+        pass
