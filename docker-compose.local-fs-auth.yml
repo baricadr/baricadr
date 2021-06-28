@@ -90,7 +90,7 @@ services:
         tty: true
         entrypoint: "/bin/sh"
         volumes:
-            - ./test-data/test-repo/:/test-repo/:ro
+            - ./test-data/test-repo-sftp/:/test-repo/:ro
 
     db:
         image: postgres:11-alpine
