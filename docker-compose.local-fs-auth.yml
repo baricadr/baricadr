@@ -5,6 +5,7 @@ x-baricadr-variables: &baricadr-variables
     BARICADR_RUN_MODE: "dev"
     BARICADR_REPOS_CONF: "test-data/sample_repos.yml"
     TZ: "Etc/UTC"
+    CELERYD_CONCURRENCY: 3
 
 
 services:
@@ -64,12 +65,33 @@ services:
             - "1025:1025"
             - "8025:8025"
 
+    # An SFTP server for tests
     sftp:
         image: atmoz/sftp
         command: foo:pass:1001
         volumes:
             - ./test-data/test-repo/:/home/foo/test-repo/:ro
             - ./test-data/test-repo-sftp/:/home/foo/test-repo-sftp/:ro
+
+    # An S3 server for tests
+    minio:
+        image: minio/minio
+        ports:
+            - "9000:9000"
+        environment:
+          MINIO_ACCESS_KEY: admin
+          MINIO_SECRET_KEY: password
+        command: server /data
+
+    # An S3 client to bootstrap the S3 server
+    minioc:
+        image: minio/mc
+        stdin_open: true
+        tty: true
+        entrypoint: "/bin/sh"
+        volumes:
+            - ./test-data/test-repo/:/test-repo/:ro
+            - ./test-data/test-repo-sftp/:/test-repo-sftp/:ro
 
     db:
         image: postgres:11-alpine

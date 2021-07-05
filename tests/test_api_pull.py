@@ -32,12 +32,23 @@ class TestApiPull(BaricadrTestCase):
         assert response.status_code == 400
         assert response.json == {"error": "The email address is not valid. It must have exactly one @-sign."}
 
+
+class TestApiPullSFTP(BaricadrTestCase):
+
+    testing_repos = {
+        "simple": "/repos/test_repo_sftp/",
+        "symlinks": "/repos/test_repo_sftp/",
+        "exclude": "/repos/test_repo_exclude/",
+        "exclude_multiple": "/repos/test_repo_exclude_multiple/",
+        "chown": "/repos/test_repo/",
+    }
+
     def test_pull_success(self, app, client):
         """
         Try to pull a dir in normal conditions
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -56,7 +67,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a file in normal conditions
         """
 
-        repo_file = '/repos/test_repo/subdir/subfile.txt'
+        repo_file = os.path.join(self.testing_repos['simple'], 'subdir/subfile.txt')
         if os.path.exists(repo_file):
             os.remove(repo_file)
 
@@ -72,7 +83,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a file in normal conditions, with excludes but not for asked file
         """
 
-        repo_file = '/repos/test_repo_exclude/subdir/subfile.txt'
+        repo_file = os.path.join(self.testing_repos['exclude'], 'subdir/subfile.txt')
         if os.path.exists(repo_file):
             os.remove(repo_file)
 
@@ -88,7 +99,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a file in normal conditions, with excluded file
         """
 
-        repo_file = '/repos/test_repo_exclude/subdir/subsubdir/poutrelle.xml'
+        repo_file = os.path.join(self.testing_repos['exclude'], 'subdir/subsubdir/poutrelle.xml')
         if os.path.exists(repo_file):
             os.remove(repo_file)
 
@@ -104,7 +115,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format
         """
 
-        repo_dir = '/repos/test_repo_sftp/subdir'
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -132,7 +143,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format, with a preexisting symlink
         """
 
-        repo_dir = '/repos/test_repo_sftp/subdir'
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -164,7 +175,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing symlinks in rclone format, with a preexisting different symlink
         """
 
-        repo_dir = '/repos/test_repo_sftp/subdir'
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -197,7 +208,7 @@ class TestApiPull(BaricadrTestCase):
         In this case rclone will replace local files with remote symlinks.
         """
 
-        repo_dir = '/repos/test_repo_sftp/subdir'
+        repo_dir = os.path.join(self.testing_repos['symlinks'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -231,7 +242,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir twice at the same time
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -257,7 +268,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir and subdir at the same time
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -283,7 +294,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir and subdir at the same time
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -309,7 +320,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull multiple dirs at the same time
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -351,7 +362,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a subdir already pulled just before
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -373,7 +384,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing other local-only data
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -399,7 +410,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing some locally modified data
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -441,7 +452,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing some locally deleted data
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -472,7 +483,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir containing some file modified locally a long time ago
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['simple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -506,7 +517,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir with an exclude rule
         """
 
-        repo_dir = '/repos/test_repo_exclude/subdir'
+        repo_dir = os.path.join(self.testing_repos['exclude'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -526,7 +537,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir with an exclude rule
         """
 
-        repo_dir = '/repos/test_repo_exclude_multiple/subdir'
+        repo_dir = os.path.join(self.testing_repos['exclude_multiple'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -546,7 +557,7 @@ class TestApiPull(BaricadrTestCase):
         Try to pull a dir in normal conditions and check chown
         """
 
-        repo_dir = '/repos/test_repo/subdir'
+        repo_dir = os.path.join(self.testing_repos['chown'], 'subdir')
         if os.path.exists(repo_dir):
             shutil.rmtree(repo_dir)
 
@@ -608,3 +619,22 @@ class TestApiPull(BaricadrTestCase):
 
         pull_id = self.pull_quick(client, path)
         self.wait_for_pull(client, pull_id)
+
+
+class TestApiPullS3(TestApiPullSFTP):
+
+    testing_repos = {
+        "simple": "/repos/test_repo_s3/",
+        "symlinks": "/repos/test_repo_s3_symlinks/",
+        "exclude": "/repos/test_repo_freeze_exclude_s3/",
+        "exclude_multiple": "/repos/test_repo_freeze_exclude_multiple_s3/",
+    }
+
+    def test_pull_chown(self, app, client):
+        pass
+
+    def test_pull_race(self, app, client):
+        pass
+
+    def test_pull_race_subdir(self, app, client):
+        pass

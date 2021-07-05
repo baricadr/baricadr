@@ -7,26 +7,6 @@ from . import BaricadrTestCase
 
 class TestApiFreeze(BaricadrTestCase):
 
-    template_repo = "/baricadr/test-data/test-repo/"
-    testing_repo = "/repos/test_repo_freeze/"
-    testing_repos = [
-        "/repos/test_repo_freeze/",
-        "/repos/test_repo_freeze_exclude/",
-        "/repos/test_repo_freeze_exclude_multiple/",
-        "/repos/test_repo_freeze_disabled/"
-    ]
-
-    def setup_method(self):
-        for repo in self.testing_repos:
-            if os.path.exists(repo):
-                shutil.rmtree(repo)
-            shutil.copytree(self.template_repo, repo, symlinks=True, ignore_dangling_symlinks=True)
-
-    def teardown_method(self):
-        for repo in self.testing_repos:
-            if os.path.exists(repo):
-                shutil.rmtree(repo)
-
     def test_freeze_missing_path(self, client):
         """
         Freeze without a proper path
@@ -51,6 +31,29 @@ class TestApiFreeze(BaricadrTestCase):
 
         assert response.status_code == 400
         assert response.json == {"error": "The email address is not valid. It must have exactly one @-sign."}
+
+
+class TestApiFreezeSFTP(BaricadrTestCase):
+
+    template_repo = "/baricadr/test-data/test-repo/"
+    testing_repo = "/repos/test_repo_freeze/"
+    testing_repos = [
+        "/repos/test_repo_freeze/",
+        "/repos/test_repo_freeze_exclude/",
+        "/repos/test_repo_freeze_exclude_multiple/",
+        "/repos/test_repo_freeze_disabled/"
+    ]
+
+    def setup_method(self):
+        for repo in self.testing_repos:
+            if os.path.exists(repo):
+                shutil.rmtree(repo)
+            shutil.copytree(self.template_repo, repo, symlinks=True, ignore_dangling_symlinks=True)
+
+    def teardown_method(self):
+        for repo in self.testing_repos:
+            if os.path.exists(repo):
+                shutil.rmtree(repo)
 
     def test_freeze_single(self, app, client):
         """
@@ -436,7 +439,7 @@ class TestApiFreeze(BaricadrTestCase):
         Try to freeze a dir with an exclude rule
         """
 
-        repo_dir = os.path.join('/repos/test_repo_freeze_exclude')
+        repo_dir = os.path.join(self.testing_repos[1])
 
         self.set_old_atime(repo_dir, age=3600 * 5000)
 
@@ -468,7 +471,7 @@ class TestApiFreeze(BaricadrTestCase):
         Try to freeze a dir with an exclude rule
         """
 
-        repo_dir = os.path.join('/repos/test_repo_freeze_exclude_multiple')
+        repo_dir = os.path.join(self.testing_repos[2])
 
         self.set_old_atime(repo_dir, age=3600 * 5000)
 
@@ -499,7 +502,7 @@ class TestApiFreeze(BaricadrTestCase):
         """
         Try to freeze a single file in a non freezable repo
         """
-        repo_dir = os.path.join('/repos/test_repo_freeze_disabled/')
+        repo_dir = os.path.join(self.testing_repos[3])
 
         self.freeze_and_wait(client, repo_dir)
 
@@ -554,3 +557,35 @@ class TestApiFreeze(BaricadrTestCase):
 
         freeze_id = self.freeze_quick(client, path)
         self.wait_for_freeze(client, freeze_id)
+
+
+class TestApiFreezeS3(TestApiFreezeSFTP):
+
+    template_repo = "/baricadr/test-data/test-repo/"
+    testing_repo = "/repos/test_repo_freeze_s3/"
+    testing_repos = [
+        "/repos/test_repo_freeze_s3/",
+        "/repos/test_repo_freeze_exclude_s3/",
+        "/repos/test_repo_freeze_exclude_multiple_s3/",
+        "/repos/test_repo_freeze_disabled_s3/"
+    ]
+
+    def test_freeze_race_subdir(self, app, client):
+        """
+        Skip this test with S3, too fast to test race conditions like this
+        """
+
+        pass
+
+    def test_freeze_race_updir(self, app, client):
+        """
+        Skip this test with S3, too fast to test race conditions like this
+        """
+
+        pass
+
+    def test_freeze_race(self, app, client):
+        pass
+
+    def test_freeze_race_multiple(self, app, client):
+        pass

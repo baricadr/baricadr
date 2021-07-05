@@ -28,19 +28,6 @@ class Backend():
 
         self.name = None
 
-        if 'url' not in conf:
-            raise ValueError("Missing 'url' in backend config '%s'" % conf)
-
-        if 'user' not in conf:
-            raise ValueError("Missing 'user' in backend config '%s'" % conf)
-
-        if 'password' not in conf:
-            raise ValueError("Missing 'password' in backend config '%s'" % conf)
-
-        self.url = conf['url']
-        self.user = conf['user']
-        self.password = conf['password']
-
     def pull(self, repo, path, dry_run=False):
         """
         Download a file from remote into local repository
@@ -53,6 +40,12 @@ class Backend():
 
         :rtype: ?
         :return: ?
+        """
+        raise NotImplementedError()
+
+    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
+        """
+        List content in a distant path
         """
         raise NotImplementedError()
 
@@ -78,19 +71,18 @@ class RcloneBackend(Backend):
 
         return obscure_password
 
-    def remote_is_single(self, repo, path):
+    def remote_path_number(self, repo, path):
         """
         Check if distant path is a single file or not
         """
 
         remote_list = self.remote_list(repo, path, max_depth=0)
-        return len(remote_list) == 1
+        return len(remote_list)
 
-    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
+    def do_remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False, backend_specific_options=""):
         """
         List content in a distant path
         """
-        obscure_password = self.obscurify_password(self.password)
         tempRcloneConfig = self.temp_rclone_config()
 
         rel_path = repo.relative_path(path)
@@ -107,7 +99,7 @@ class RcloneBackend(Backend):
         if max_depth:
             max_depth_command = "--max-depth " + str(max_depth)
 
-        cmd = "rclone lsjson -R --config '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (tempRcloneConfig.name, src, self.user, obscure_password, max_depth_command)
+        cmd = "rclone lsjson -R --config '%s' '%s' %s %s" % (tempRcloneConfig.name, src, backend_specific_options, max_depth_command)
         current_app.logger.info(cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
@@ -122,7 +114,9 @@ class RcloneBackend(Backend):
             current_app.logger.warning(err)
             raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
 
-        current_app.logger.info('Raw output from rclone lsjson: %s' % json_output)
+        ls_log = str(json_output)
+        ls_log = (ls_log[:15000] + '...') if len(ls_log) > 15000 else ls_log
+        current_app.logger.info('Raw output from rclone lsjson: %s' % ls_log)
 
         path_rel_prefix = rel_path
         if len(json_output) == 1 and not json_output[0]['IsDir']:
@@ -136,6 +130,9 @@ class RcloneBackend(Backend):
                 else:
                     file_path = entry['Path']
 
+                if file_path.endswith('.rclonelink'):
+                    file_path = file_path[:-11]
+
                 if full:
                     entry['Path'] = file_path
                     remote_list.append(entry)
@@ -146,7 +143,9 @@ class RcloneBackend(Backend):
         if missing:
             remote_list = self.missing_list(path, remote_list, max_depth, repo, full)
 
-        current_app.logger.info('Parsed remote listing from rclone: %s' % remote_list)
+        lsr_log = str(remote_list)
+        lsr_log = (lsr_log[:15000] + '...') if len(lsr_log) > 15000 else lsr_log
+        current_app.logger.info('Parsed remote listing from rclone: %s' % lsr_log)
 
         return remote_list
 
@@ -183,13 +182,7 @@ class RcloneBackend(Backend):
                     yield x
 
     def temp_rclone_config(self):
-        tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
-        tempRcloneConfig.write('[' + self.name + ']\n')
-        tempRcloneConfig.write('type = ' + self.name + '\n')
-        tempRcloneConfig.write('host = ' + self.remote_host + '\n')
-        tempRcloneConfig.seek(0)
-
-        return tempRcloneConfig
+        raise NotImplementedError()
 
     def parse_copy_output(self, stderr, dry_run):
         """
@@ -226,22 +219,17 @@ class RcloneBackend(Backend):
 
         return (copied, transferred)
 
-
-class SftpBackend(RcloneBackend):
-    def __init__(self, conf):
-        RcloneBackend.__init__(self, conf)
-        self.name = 'sftp'
-
-        url_split = self.url.split(":")
-        self.remote_host = url_split[0]
-        self.remote_prefix = os.path.join(url_split[1], '')
-
-    def pull(self, repo, path, dry_run=False):
-        obscure_password = self.obscurify_password(self.password)
+    def do_pull(self, repo, path, dry_run=False, backend_specific_options=""):
         tempRcloneConfig = self.temp_rclone_config()
 
         rclone_cmd = 'copy'
-        is_single = self.remote_is_single(repo, path)
+        rpath_num = self.remote_path_number(repo, path)
+
+        if rpath_num == 0:
+            # SFTP backend throws a RuntimeError when calling remote_list(), make sure we do the same for other backends
+            raise RuntimeError("File/directory not found on remote repository: %s" % (path))
+
+        is_single = rpath_num == 1
         if is_single:
             rclone_cmd = 'copyto'
 
@@ -266,7 +254,7 @@ class SftpBackend(RcloneBackend):
             ex_options += " --dry-run"
 
         # We use --ignore-existing to avoid deleting locally modified files (for example if a file was modified locally but the backup is not yet up-to-date)
-        cmd = "rclone %s --links --ignore-existing -vv --config '%s' '%s' '%s' --sftp-user '%s' --sftp-pass '%s' %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, self.user, obscure_password, ex_options)
+        cmd = "rclone %s --links --ignore-existing -vv --config '%s' '%s' '%s' %s %s" % (rclone_cmd, tempRcloneConfig.name, src, dest, backend_specific_options, ex_options)
         current_app.logger.info("Running command: %s" % cmd)
         p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
@@ -283,10 +271,100 @@ class SftpBackend(RcloneBackend):
         return self.parse_copy_output(err, dry_run)
 
 
+class SftpBackend(RcloneBackend):
+    def __init__(self, conf):
+        RcloneBackend.__init__(self, conf)
+
+        if 'url' not in conf:
+            raise ValueError("Missing 'url' in backend config '%s'" % conf)
+
+        if 'user' not in conf:
+            raise ValueError("Missing 'user' in backend config '%s'" % conf)
+
+        if 'password' not in conf:
+            raise ValueError("Missing 'password' in backend config '%s'" % conf)
+
+        self.url = conf['url']
+        self.user = conf['user']
+        self.password = conf['password']
+
+        self.name = 'sftp'
+
+        url_split = self.url.split(":")
+        self.remote_host = url_split[0]
+        self.remote_prefix = os.path.join(url_split[1], '')
+
+    def temp_rclone_config(self):
+        tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
+        tempRcloneConfig.write('[' + self.name + ']\n')
+        tempRcloneConfig.write('type = ' + self.name + '\n')
+        tempRcloneConfig.write('host = ' + self.remote_host + '\n')
+        tempRcloneConfig.seek(0)
+
+        return tempRcloneConfig
+
+    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
+        """
+        List content in a distant path
+        """
+        obscure_password = self.obscurify_password(self.password)
+        backend_specific_options = "--sftp-user '%s' --sftp-pass '%s'" % (self.user, obscure_password)
+
+        return self.do_remote_list(repo, path, missing, max_depth, from_root, full, backend_specific_options)
+
+    def pull(self, repo, path, dry_run=False):
+        obscure_password = self.obscurify_password(self.password)
+        backend_specific_options = "--sftp-user '%s' --sftp-pass '%s'" % (self.user, obscure_password)
+
+        return self.do_pull(repo, path, dry_run, backend_specific_options)
+
+
 class S3Backend(RcloneBackend):
     def __init__(self, conf):
         RcloneBackend.__init__(self, conf)
         self.name = 's3'
 
+        if 'provider' not in conf:
+            raise ValueError("Missing 'provider' in backend config '%s'" % conf)
+
+        if 'endpoint' not in conf:
+            raise ValueError("Missing 'endpoint' in backend config '%s'" % conf)
+
+        if 'path' not in conf:
+            raise ValueError("Missing 'path' in backend config '%s'" % conf)
+
+        if 'access_key_id' not in conf:
+            raise ValueError("Missing 'access_key_id' in backend config '%s'" % conf)
+
+        if 'secret_access_key' not in conf:
+            raise ValueError("Missing 'secret_access_key' in backend config '%s'" % conf)
+
+        self.provider = conf['provider']
+        self.endpoint = conf['endpoint']
+        self.remote_prefix = conf['path']
+        self.access_key_id = conf['access_key_id']
+        self.secret_access_key = conf['secret_access_key']
+
+    def temp_rclone_config(self):
+        tempRcloneConfig = tempfile.NamedTemporaryFile('w+t')
+        tempRcloneConfig.write('[' + self.name + ']\n')
+        tempRcloneConfig.write('type = ' + self.name + '\n')
+        tempRcloneConfig.write('provider = ' + self.provider + '\n')
+        tempRcloneConfig.write('endpoint = ' + self.endpoint + '\n')
+        tempRcloneConfig.write('env_auth = false\n')  # Forcing to put identifiers here
+        tempRcloneConfig.write('access_key_id = ' + self.access_key_id + '\n')
+        tempRcloneConfig.write('secret_access_key = ' + self.secret_access_key + '\n')
+        tempRcloneConfig.seek(0)
+
+        return tempRcloneConfig
+
+    def remote_list(self, repo, path, missing=False, max_depth=1, from_root=False, full=False):
+        """
+        List content in a distant path
+        """
+
+        return self.do_remote_list(repo, path, missing, max_depth, from_root, full)
+
     def pull(self, repo, path, dry_run=False):
-        raise NotImplementedError()
+
+        return self.do_pull(repo, path, dry_run)

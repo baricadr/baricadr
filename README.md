@@ -186,9 +186,11 @@ You need to write a yaml file containing the list of repositories that you wish 
 
 /another/local/path:
     backend: s3
-    url: google
-    user: someone
-    password: xxxxx
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
     exclude: *xml
     freezable: True  # Set this to True to allow Baricadr to freeze files (default: False)
     freeze_age: 365   # By default Baricadr will "freeze" files older than 180 days (6 months). You can change this limit with this parameter.

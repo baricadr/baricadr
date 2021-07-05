@@ -11,6 +11,14 @@ class TestReposFreeze(BaricadrTestCase):
 
     template_repo = "/baricadr/test-data/test-repo/"
     testing_repo = "/repos/test_repo_freeze_tmp/"
+    testing_conf = {
+        'backend': 'sftp',
+        'url': 'sftp:test-repo/',
+        'user': 'foo',
+        'password': 'pass',
+        'freeze_age': 3,
+        'freezable': True
+    }
 
     def setup_method(self):
         if os.path.exists(self.testing_repo):
@@ -25,14 +33,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -64,14 +65,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -108,16 +102,10 @@ class TestReposFreeze(BaricadrTestCase):
     def test_freeze_exclude(self, app):
 
         # First get a local repo
+        conf = self.testing_conf.copy()
+        conf['exclude'] = "*xml"
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'exclude': "*xml",
-                'freezable': True
-            }
+            self.testing_repo: conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -160,17 +148,10 @@ class TestReposFreeze(BaricadrTestCase):
     def test_freeze_exclude_multiple(self, app):
 
         # First get a local repo
-
+        conf = self.testing_conf.copy()
+        conf['exclude'] = "*xml , *tsv"
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'exclude': "*xml , *tsv",
-                'freezable': True
-            }
+            self.testing_repo: conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -214,14 +195,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -254,14 +228,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -307,14 +274,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -339,14 +299,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -389,15 +342,10 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
 
+        conf = self.testing_conf.copy()
+        conf['freezable'] = False
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': False
-            }
+            self.testing_repo: conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -432,14 +380,7 @@ class TestReposFreeze(BaricadrTestCase):
 
         # First get a local repo
         conf = {
-            self.testing_repo: {
-                'backend': 'sftp',
-                'url': 'sftp:test-repo/',
-                'user': 'foo',
-                'password': 'pass',
-                'freeze_age': 3,
-                'freezable': True
-            }
+            self.testing_repo: self.testing_conf
         }
 
         app.repos.read_conf_from_str(str(conf))
@@ -495,3 +436,19 @@ class TestReposFreeze(BaricadrTestCase):
 
         with open(repo_dir + '/subfile.txt', 'r') as local_file:
             assert local_file.readline() == 'This subfile was touched locally\n'
+
+
+class TestReposFreezeS3(TestReposFreeze):
+
+    template_repo = "/baricadr/test-data/test-repo/"
+    testing_repo = "/repos/test_repo_freeze_tmp/"
+    testing_conf = {
+        'backend': 's3',
+        'provider': 'Ceph',
+        'endpoint': 'http://minio:9000/',
+        'path': 'remote-test-repo/test-repo/',
+        'access_key_id': 'admin',
+        'secret_access_key': 'password',
+        'freeze_age': 3,
+        'freezable': True
+    }

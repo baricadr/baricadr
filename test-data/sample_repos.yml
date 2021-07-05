@@ -5,13 +5,6 @@
     password: pass
     freezable: True
 
-/repos/another/local/path:
-    backend: s3
-    url: google
-    user: someone
-    password: xxxxx
-    freezable: True
-
 /repos/test_repo/:
     backend: sftp
     url: sftp:test-repo
@@ -83,4 +76,63 @@
     user: foo
     password: pass
     freeze_age: 10
+    freezable: True
+
+# S3 repos
+/repos/test_repo_s3/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
+    freezable: True
+
+/repos/test_repo_s3_symlinks/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo-symlinks/test-repo-sftp/
+    access_key_id: admin
+    secret_access_key: password
+    freezable: True
+
+/repos/test_repo_freeze_s3/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
+    freezable: True
+    auto_freeze: False
+    auto_freeze_interval: 14
+
+/repos/test_repo_freeze_disabled_s3/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
+    freezable: False
+
+/repos/test_repo_freeze_exclude_s3/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
+    exclude: "*xml"
+    freezable: True
+
+/repos/test_repo_freeze_exclude_multiple_s3/:
+    backend: s3
+    provider: Ceph
+    endpoint: http://minio:9000/
+    path: remote-test-repo/test-repo/
+    access_key_id: admin
+    secret_access_key: password
+    exclude: "*xml , *tsv"
     freezable: True

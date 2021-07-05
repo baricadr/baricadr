@@ -5,12 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## Unreleased
 
 ### Changed
 
+## [0.2] - 2021.06.28
+
+### Added
+
+- Support for S3 backend
+
+### Changed
+
 - Run the web process as root to avoid permission problems while listing files (data should be mounted in ro mode anyway)
+- Fixed remote listing of symlinks
+- Fixed logs flooded when listing remote
 
 ## [0.1.5] - 2021-04-29
 
