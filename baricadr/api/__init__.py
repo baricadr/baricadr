@@ -76,6 +76,24 @@ def list():
     return jsonify(files)
 
 
+@api.route('/tree', methods=['POST'])
+def tree():
+    current_app.logger.debug("API call: Tree listing %s" % request.json)
+
+    if not request.json or 'path' not in request.json:
+        return jsonify({'error': 'Missing "path"'}), 400
+
+    max_depth = 1
+    if 'max_depth' in request.json:
+        max_depth = request.json['max_depth']
+
+    asked_path = os.path.abspath(request.json['path'])
+    repo = current_app.repos.get_repo(asked_path)
+    files = repo.remote_tree(asked_path, max_depth=max_depth)
+
+    return jsonify(files)
+
+
 def __pull_or_freeze(action, request):
 
     if action not in ['pull', 'freeze']:

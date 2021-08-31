@@ -186,6 +186,22 @@ class Repo():
 
         return self.backend.remote_list(self, path, missing, max_depth, from_root, full)
 
+    def remote_tree(self, path, max_depth=1):
+        """
+        List files from remote repository, with missing files tagged with a '*'
+
+        :type path: str
+        :param path: Path where baricadr should list files
+
+        :type max_depth: int
+        :param max_depth: Restrict to a max depth. Set to 0 for all files.
+
+        :rtype: list
+        :return: list of files
+        """
+
+        return self.backend.remote_tree(self, path, max_depth)
+
     def freeze(self, path, force=False, dry_run=False):
         """
         Remove files from local repository
