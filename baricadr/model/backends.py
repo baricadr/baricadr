@@ -237,7 +237,9 @@ class RcloneBackend(Backend):
                 if file_path.endswith('.rclonelink'):
                     file_path = file_path[:-11]
 
-                if os.path.exists(file_path):
+                full_file_path = os.path.join(path, file_path)
+
+                if os.path.exists(full_file_path):
                     remote_list.append({'Path': file_path})
                 else:
                     remote_list.append({'Path': file_path + "*"})
