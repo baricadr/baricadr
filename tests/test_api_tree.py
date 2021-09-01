@@ -31,7 +31,7 @@ class TestApiList(BaricadrTestCase):
 
         assert response.status_code == 200
         remote_file_list = set([file['Path'] for file in response.json])
-        assert remote_file_list == set(file_list)
+        assert sorted(remote_file_list) == sorted(set(file_list))
 
     def test_tree_max_depth(self, client):
         """
@@ -55,7 +55,7 @@ class TestApiList(BaricadrTestCase):
         assert response.status_code == 200
         remote_file_list = [file['Path'] for file in response.json]
 
-        assert remote_file_list == ["file.txt", "file2.txt*"]
+        assert sorted(remote_file_list) == sorted(["file.txt", "file2.txt*"])
 
 
 class TestApiListS3(TestApiList):
