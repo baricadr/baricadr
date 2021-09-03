@@ -19,9 +19,8 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/tree", json=body)
 
         assert response.status_code == 200
-        remote_file_list = [file['Path'] for file in response.json]
 
-        assert sorted(remote_file_list) == sorted(["file.txt", "file2.txt*"])
+        assert sorted(response.json) == sorted([{'Path': 'file.txt', 'missing': False}, {'Path': 'file2.txt', 'missing': True}])
 
 
 class TestApiListS3(TestApiList):
