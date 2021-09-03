@@ -20,7 +20,7 @@ class TestApiList(BaricadrTestCase):
 
         assert response.status_code == 200
 
-        assert sorted(response.json) == sorted([{'Path': 'file.txt', 'missing': False}, {'Path': 'file2.txt', 'missing': True}])
+        assert sorted(response.json, key=lambda k: k['Path']) == sorted([{'Path': 'file.txt', 'missing': False}, {'Path': 'file2.txt', 'missing': True}], key=lambda k: k['Path'])
 
 
 class TestApiListS3(TestApiList):
