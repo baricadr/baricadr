@@ -64,7 +64,10 @@ def list():
 
     max_depth = 1
     if 'max_depth' in request.json:
-        max_depth = request.json['max_depth']
+        if request.json['max_depth']:
+            max_depth = request.json['max_depth']
+        else:
+            max_depth = 0
 
     if 'from_root' in request.json and str(request.json['from_root']).lower() == "true":
         from_root = request.json['from_root']
@@ -85,7 +88,10 @@ def tree():
 
     max_depth = 1
     if 'max_depth' in request.json:
-        max_depth = request.json['max_depth']
+        if request.json['max_depth']:
+            max_depth = request.json['max_depth']
+        else:
+            max_depth = 0
 
     asked_path = os.path.abspath(request.json['path'])
     repo = current_app.repos.get_repo(asked_path)
