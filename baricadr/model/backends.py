@@ -239,10 +239,7 @@ class RcloneBackend(Backend):
 
                 full_file_path = os.path.join(path, file_path)
 
-                if os.path.exists(full_file_path):
-                    remote_list.append({'Path': file_path, 'missing': False})
-                else:
-                    remote_list.append({'Path': file_path, 'missing': True})
+                remote_list.append({'Path': file_path, 'missing': not os.path.exists(full_file_path)})
 
         tempRcloneConfig.close()
 
