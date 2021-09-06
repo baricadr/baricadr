@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- /tree endpoint: listing all files in a remote. Returns a list of dicts with the file path and 'missing' attribute. 'missing' will be set to true if the file is missing from the local storage.
+
 ### Changed
 
 ## [0.2] - 2021.06.28

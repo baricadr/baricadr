@@ -49,6 +49,12 @@ class Backend():
         """
         raise NotImplementedError()
 
+    def remote_tree(self, repo, path, max_depth=1, from_root=False):
+        """
+        List content in a distant path, with missing files tagged with a '*'
+        """
+        raise NotImplementedError()
+
 
 class RcloneBackend(Backend):
     def __init__(self, conf):
@@ -184,6 +190,65 @@ class RcloneBackend(Backend):
     def temp_rclone_config(self):
         raise NotImplementedError()
 
+    def do_remote_tree(self, repo, path, max_depth=1, backend_specific_options=""):
+        """
+        List content in a distant path, with missing files tagged with a '*'
+        """
+        tempRcloneConfig = self.temp_rclone_config()
+
+        rel_path = repo.relative_path(path)
+
+        src = "%s:%s%s" % (self.name, self.remote_prefix, rel_path)
+
+        max_depth_command = ""
+
+        try:
+            max_depth = int(max_depth)
+        except ValueError:
+            max_depth = 1
+        # If not 0 (0 is for listing all)
+        if max_depth:
+            max_depth_command = "--max-depth " + str(max_depth)
+
+        cmd = "rclone lsjson -R --config '%s' '%s' %s %s" % (tempRcloneConfig.name, src, backend_specific_options, max_depth_command)
+        current_app.logger.info(cmd)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        output, err = p.communicate()
+        retcode = p.returncode
+        try:
+            json_output = json.loads(output.decode('utf-8'))
+        except json.decoder.JSONDecodeError:
+            current_app.logger.warning('Failed to parse json output from rclone lsjson: %s' % output.decode('utf-8'))
+
+        if retcode != 0:
+            current_app.logger.warning(output)
+            current_app.logger.warning(err)
+            raise RuntimeError("Rclone cmd was terminated by signal " + str(retcode) + ": can't run rclone lsjon (stderr: " + str(err) + ")")
+
+        ls_log = str(json_output)
+        ls_log = (ls_log[:15000] + '...') if len(ls_log) > 15000 else ls_log
+        current_app.logger.info('Raw output from rclone lsjson: %s' % ls_log)
+
+        remote_list = []
+        for entry in json_output:
+            if not entry['IsDir']:
+                file_path = entry['Path']
+
+                if file_path.endswith('.rclonelink'):
+                    file_path = file_path[:-11]
+
+                full_file_path = os.path.join(path, file_path)
+
+                remote_list.append({'Path': file_path, 'missing': not os.path.exists(full_file_path)})
+
+        tempRcloneConfig.close()
+
+        lsr_log = str(remote_list)
+        lsr_log = (lsr_log[:15000] + '...') if len(lsr_log) > 15000 else lsr_log
+        current_app.logger.info('Parsed remote listing from rclone: %s' % lsr_log)
+
+        return remote_list
+
     def parse_copy_output(self, stderr, dry_run):
         """
         Do some dirty things: parse rclone copy stderr to guess which files were transferred
@@ -312,6 +377,15 @@ class SftpBackend(RcloneBackend):
 
         return self.do_remote_list(repo, path, missing, max_depth, from_root, full, backend_specific_options)
 
+    def remote_tree(self, repo, path, max_depth=1):
+        """
+        List content in a distant path, with missing files tagged with a '*'
+        """
+        obscure_password = self.obscurify_password(self.password)
+        backend_specific_options = "--sftp-user '%s' --sftp-pass '%s'" % (self.user, obscure_password)
+
+        return self.do_remote_tree(repo, path, max_depth, backend_specific_options)
+
     def pull(self, repo, path, dry_run=False):
         obscure_password = self.obscurify_password(self.password)
         backend_specific_options = "--sftp-user '%s' --sftp-pass '%s'" % (self.user, obscure_password)
@@ -364,6 +438,12 @@ class S3Backend(RcloneBackend):
         """
 
         return self.do_remote_list(repo, path, missing, max_depth, from_root, full)
+
+    def remote_tree(self, repo, path, max_depth=1):
+        """
+        List content in a distant path, with missing files tagged with a '*'
+        """
+        return self.do_remote_tree(repo, path, max_depth)
 
     def pull(self, repo, path, dry_run=False):
 
