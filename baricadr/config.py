@@ -2,7 +2,7 @@ class BaseConfig(object):
     DEBUG = False
     TESTING = False
 
-    BARICADR_VERSION = "0.2.2"
+    BARICADR_VERSION = "0.2.0"
 
     # Celery
     BROKER_TRANSPORT = 'redis'
