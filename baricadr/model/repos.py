@@ -236,7 +236,8 @@ class Repo():
 
         freezed_size = 0
         for tofreeze in freezables:
-            freezed_size += os.path.getsize(tofreeze)
+            if not os.path.islink(tofreeze):
+                freezed_size += os.path.getsize(tofreeze)
 
         for to_freeze in freezables:
             if dry_run:
