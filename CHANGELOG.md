@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+## [0.2.1] - 2021-10-28
+
+### Changed
+
 - Fixed error when freezing a dead symlink
 
 ## [0.2.0] - 2021-09-23
