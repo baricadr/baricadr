@@ -17,7 +17,7 @@ class TestApiList(BaricadrTestCase):
         response = client.post("/list", json=body)
 
         assert response.status_code == 400
-        assert response.json['error'] == "Could not find baricadr repository for path /blabla/"
+        assert response.json['error'] == 'Could not find baricadr repository for path "/blabla/"'
 
     def test_list_fill_depth_1(self, client):
         """
