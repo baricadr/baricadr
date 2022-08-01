@@ -14,6 +14,17 @@ from flask import (Blueprint, current_app, jsonify, make_response, request)
 api = Blueprint('api', __name__, url_prefix='/')
 
 
+# Global error handler
+@api.errorhandler(Exception)
+def handle_exception(e):
+    # pass through HTTP errors
+    if isinstance(e, RuntimeError):
+        return jsonify({'error': str(e)}), 400
+
+    # now you're handling non-HTTP exceptions only
+    return jsonify({'error': 'Internal server error'}), 502
+
+
 # Endpoint to check if API is running for CLI tests
 @api.route('/version', methods=['GET'])
 def version():

@@ -9,6 +9,16 @@ class TestApiList(BaricadrTestCase):
     repo_root = "/repos/test_repo/"
     expected_mimetype = "text/plain; charset=utf-8"
 
+    def test_tree_wrong_repo(self, client):
+        """
+            Get files at depth 1
+        """
+        body = {"path": "/blabla"}
+        response = client.post("/list", json=body)
+
+        assert response.status_code == 400
+        assert response.json['error'] == "Could not find baricadr repository for path /blabla"
+
     def test_tree_missing(self, client):
         if not os.path.isfile(os.path.join(self.repo_root, "file.txt")):
             Path(os.path.join(self.repo_root, "file.txt")).touch()
